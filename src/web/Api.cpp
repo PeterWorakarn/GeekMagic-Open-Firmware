@@ -143,6 +143,18 @@ void registerApiEndpoints(Webserver* webserver) {
     // responses=200:application/json,401:application/json,400:application/json
     webserver->raw().on("/api/v1/token/save", HTTP_POST, [webserver]() { handleTokenSave(webserver); });
 
+    // @openapi {get} /logs version=v1 group=System summary="Get recent logs" requiresAuth=true
+    // responses=200:application/json,401:application/json
+    webserver->raw().on("/api/v1/logs", HTTP_GET, [webserver]() { handleLogsGet(webserver); });
+
+    // @openapi {get} /logs/download version=v1 group=System summary="Download logs as text file" requiresAuth=true
+    // responses=200:text/plain,401:application/json
+    webserver->raw().on("/api/v1/logs/download", HTTP_GET, [webserver]() { handleLogsDownload(webserver); });
+
+    // @openapi {post} /logs/clear version=v1 group=System summary="Clear log buffer" requiresAuth=true
+    // responses=200:application/json,401:application/json
+    webserver->raw().on("/api/v1/logs/clear", HTTP_POST, [webserver]() { handleLogsClear(webserver); });
+
     webserver->raw().onNotFound([webserver]() {
         if (webserver->raw().method() == HTTP_OPTIONS) {
             setCorsHeaders(webserver);
@@ -1337,4 +1349,71 @@ static void otaHandleAborted(HTTPUpload& /*upload*/) {
 
     DisplayManager::drawTextWrapped(OTA_TEXT_X_OFFSET, OTA_TEXT_Y_OFFSET, "Aborted", 2, LCD_WHITE, LCD_BLACK, true);
     DisplayManager::drawLoadingBar(0.0F, OTA_LOADING_Y_OFFSET);
+}
+
+/**
+ * @brief Get recent logs
+ * @param webserver Pointer to the Webserver instance
+ */
+void handleLogsGet(Webserver* webserver) {
+    if (!requireBearerToken(webserver)) {
+        return;
+    }
+
+    JsonDocument doc;
+    JsonArray logsArray = doc["logs"].to<JsonArray>();
+
+    size_t count = Logger::getLogCount();
+    for (size_t i = 0; i < count; i++) {
+        const char* entry = Logger::getLogEntry(i);
+        if (entry != nullptr) {
+            logsArray.add(entry);
+        }
+    }
+
+    doc["count"] = count;
+
+    String json;
+    serializeJson(doc, json);
+
+    setCorsHeaders(webserver);
+    webserver->raw().send(HTTP_CODE_OK, "application/json", json);
+}
+
+/**
+ * @brief Download logs as a text file
+ * @param webserver Pointer to the Webserver instance
+ */
+void handleLogsDownload(Webserver* webserver) {
+    if (!requireBearerToken(webserver)) {
+        return;
+    }
+
+    String logs = Logger::getLogsAsString();
+
+    setCorsHeaders(webserver);
+    webserver->raw().sendHeader("Content-Disposition", "attachment; filename=\"logs.log\"");
+    webserver->raw().send(HTTP_CODE_OK, "text/plain", logs);
+}
+
+/**
+ * @brief Clear log buffer
+ * @param webserver Pointer to the Webserver instance
+ */
+void handleLogsClear(Webserver* webserver) {
+    if (!requireBearerToken(webserver)) {
+        return;
+    }
+
+    Logger::clearLogs();
+
+    JsonDocument doc;
+    doc["status"] = "ok";
+    doc["message"] = "Logs cleared";
+
+    String json;
+    serializeJson(doc, json);
+
+    setCorsHeaders(webserver);
+    webserver->raw().send(HTTP_CODE_OK, "application/json", json);
 }

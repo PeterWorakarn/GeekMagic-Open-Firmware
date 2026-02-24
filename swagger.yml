@@ -3,8 +3,7 @@ info:
   title: "GeekMagic-Open-Firmware API"
   version: "1.0.0"
 servers:
-  - 
-    url: "http://{host}/"
+  - url: "http://{host}/"
     description: "API Server for version 1"
     variables:
       host:
@@ -30,8 +29,7 @@ paths:
       tags:
         - "WiFi"
       security:
-        - 
-          bearerAuth: []
+        - bearerAuth: []
       description: "**Requires Authentication** - Scan available WiFi networks. This endpoint requires a valid bearer token in the Authorization header."
   /api/v1/wifi/connect:
     post:
@@ -59,8 +57,7 @@ paths:
       tags:
         - "WiFi"
       security:
-        - 
-          bearerAuth: []
+        - bearerAuth: []
       description: "**Requires Authentication** - Connect to a WiFi network. This endpoint requires a valid bearer token in the Authorization header."
       requestBody:
         content:
@@ -99,8 +96,7 @@ paths:
       tags:
         - "WiFi"
       security:
-        - 
-          bearerAuth: []
+        - bearerAuth: []
       description: "**Requires Authentication** - Get WiFi connection status. This endpoint requires a valid bearer token in the Authorization header."
   /api/v1/ntp/sync:
     post:
@@ -122,8 +118,7 @@ paths:
       tags:
         - "NTP"
       security:
-        - 
-          bearerAuth: []
+        - bearerAuth: []
       description: "**Requires Authentication** - Trigger NTP sync. This endpoint requires a valid bearer token in the Authorization header."
   /api/v1/ntp/status:
     get:
@@ -145,8 +140,7 @@ paths:
       tags:
         - "NTP"
       security:
-        - 
-          bearerAuth: []
+        - bearerAuth: []
       description: "**Requires Authentication** - Get NTP status. This endpoint requires a valid bearer token in the Authorization header."
   /api/v1/ntp/config:
     get:
@@ -168,8 +162,7 @@ paths:
       tags:
         - "NTP"
       security:
-        - 
-          bearerAuth: []
+        - bearerAuth: []
       description: "**Requires Authentication** - Get NTP configuration. This endpoint requires a valid bearer token in the Authorization header."
     post:
       summary: "Set NTP configuration"
@@ -196,8 +189,7 @@ paths:
       tags:
         - "NTP"
       security:
-        - 
-          bearerAuth: []
+        - bearerAuth: []
       description: "**Requires Authentication** - Set NTP configuration. This endpoint requires a valid bearer token in the Authorization header."
       requestBody:
         content:
@@ -232,8 +224,7 @@ paths:
       tags:
         - "System"
       security:
-        - 
-          bearerAuth: []
+        - bearerAuth: []
       description: "**Requires Authentication** - Reboot the device. This endpoint requires a valid bearer token in the Authorization header."
   /api/v1/ota/fw:
     post:
@@ -255,8 +246,7 @@ paths:
       tags:
         - "OTA"
       security:
-        - 
-          bearerAuth: []
+        - bearerAuth: []
       description: "**Requires Authentication** - Upload firmware (OTA). This endpoint requires a valid bearer token in the Authorization header."
       requestBody:
         content:
@@ -284,8 +274,7 @@ paths:
       tags:
         - "OTA"
       security:
-        - 
-          bearerAuth: []
+        - bearerAuth: []
       description: "**Requires Authentication** - Upload filesystem (OTA). This endpoint requires a valid bearer token in the Authorization header."
       requestBody:
         content:
@@ -313,8 +302,7 @@ paths:
       tags:
         - "OTA"
       security:
-        - 
-          bearerAuth: []
+        - bearerAuth: []
       description: "**Requires Authentication** - Get OTA status. This endpoint requires a valid bearer token in the Authorization header."
   /api/v1/ota/cancel:
     post:
@@ -336,8 +324,7 @@ paths:
       tags:
         - "OTA"
       security:
-        - 
-          bearerAuth: []
+        - bearerAuth: []
       description: "**Requires Authentication** - Cancel OTA. This endpoint requires a valid bearer token in the Authorization header."
   /api/v1/gif:
     post:
@@ -359,8 +346,7 @@ paths:
       tags:
         - "GIF"
       security:
-        - 
-          bearerAuth: []
+        - bearerAuth: []
       description: "**Requires Authentication** - Upload a GIF. This endpoint requires a valid bearer token in the Authorization header."
       requestBody:
         content:
@@ -399,8 +385,7 @@ paths:
       tags:
         - "GIF"
       security:
-        - 
-          bearerAuth: []
+        - bearerAuth: []
       description: "**Requires Authentication** - Delete a GIF by name. This endpoint requires a valid bearer token in the Authorization header."
       requestBody:
         content:
@@ -434,8 +419,7 @@ paths:
       tags:
         - "GIF"
       security:
-        - 
-          bearerAuth: []
+        - bearerAuth: []
       description: "**Requires Authentication** - List GIFs. This endpoint requires a valid bearer token in the Authorization header."
   /api/v1/gif/play:
     post:
@@ -469,8 +453,7 @@ paths:
       tags:
         - "GIF"
       security:
-        - 
-          bearerAuth: []
+        - bearerAuth: []
       description: "**Requires Authentication** - Play a GIF by name. This endpoint requires a valid bearer token in the Authorization header."
       requestBody:
         content:
@@ -505,8 +488,7 @@ paths:
       tags:
         - "GIF"
       security:
-        - 
-          bearerAuth: []
+        - bearerAuth: []
       description: "**Requires Authentication** - Stop GIF playback. This endpoint requires a valid bearer token in the Authorization header."
   /api/v1/token/check:
     get:
@@ -528,8 +510,7 @@ paths:
       tags:
         - "Authentication"
       security:
-        - 
-          bearerAuth: []
+        - bearerAuth: []
       description: "**Requires Authentication** - Check bearer token validity. This endpoint requires a valid bearer token in the Authorization header."
   /api/v1/token/save:
     post:
@@ -557,8 +538,7 @@ paths:
       tags:
         - "Authentication"
       security:
-        - 
-          bearerAuth: []
+        - bearerAuth: []
       description: "**Requires Authentication** - Save a new bearer token. This endpoint requires a valid bearer token in the Authorization header."
       requestBody:
         content:
@@ -573,6 +553,79 @@ paths:
               example:
                 token: "your_secure_token_value"
         required: true
+  /api/v1/logs:
+    get:
+      summary: "Get recent logs"
+      operationId: "op_v1_get_api_v1_logs"
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  logs:
+                    type: "array"
+                    items:
+                      type: "string"
+                  count:
+                    type: "integer"
+        401:
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: "object"
+      tags:
+        - "System"
+      security:
+        - bearerAuth: []
+      description: "**Requires Authentication** - Get recent logs. This endpoint requires a valid bearer token in the Authorization header."
+  /api/v1/logs/download:
+    get:
+      summary: "Download logs as text file"
+      operationId: "op_v1_get_api_v1_logs_download"
+      responses:
+        200:
+          description: ""
+          content:
+            text/plain:
+              schema:
+                type: "string"
+        401:
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: "object"
+      tags:
+        - "System"
+      security:
+        - bearerAuth: []
+      description: "**Requires Authentication** - Download logs as text file. This endpoint requires a valid bearer token in the Authorization header."
+  /api/v1/logs/clear:
+    post:
+      summary: "Clear log buffer"
+      operationId: "op_v1_post_api_v1_logs_clear"
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: "object"
+        401:
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: "object"
+      tags:
+        - "System"
+      security:
+        - bearerAuth: []
+      description: "**Requires Authentication** - Clear log buffer. This endpoint requires a valid bearer token in the Authorization header."
 components:
   securitySchemes:
     bearerAuth:
@@ -581,21 +634,15 @@ components:
       bearerFormat: "Token"
       description: "Bearer token authentication. Include the token in the Authorization header as: Bearer <token>"
 tags:
-  - 
-    name: "Authentication"
+  - name: "Authentication"
     description: "API Authentication endpoints"
-  - 
-    name: "GIF"
+  - name: "GIF"
     description: "API GIF endpoints"
-  - 
-    name: "NTP"
+  - name: "NTP"
     description: "API NTP endpoints"
-  - 
-    name: "OTA"
+  - name: "OTA"
     description: "API OTA endpoints"
-  - 
-    name: "System"
+  - name: "System"
     description: "API System endpoints"
-  - 
-    name: "WiFi"
+  - name: "WiFi"
     description: "API WiFi endpoints"

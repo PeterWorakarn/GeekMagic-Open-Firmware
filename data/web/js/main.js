@@ -1,9 +1,14 @@
 document.addEventListener("alpine:init", () => {
   Alpine.data("themeSwitcher", themeSwitcher);
-  Alpine.data("otaUploadHandler", otaUploadHandler);
-  Alpine.data("gifUploadHandler", gifUploadHandler);
-  Alpine.data("wifiHandler", wifiHandler);
-  Alpine.data("ntpHandler", ntpHandler);
-  Alpine.data("rebootHandler", rebootHandler);
-  Alpine.data("tokenHandler", tokenHandler);
+  if (typeof otaUploadHandler !== "undefined")
+    Alpine.data("otaUploadHandler", otaUploadHandler);
+  if (typeof gifUploadHandler !== "undefined")
+    Alpine.data("gifUploadHandler", gifUploadHandler);
+  if (typeof wifiHandler !== "undefined")
+    Alpine.data("wifiHandler", wifiHandler);
+  if (typeof ntpHandler !== "undefined") Alpine.data("ntpHandler", ntpHandler);
+  if (typeof rebootHandler !== "undefined")
+    Alpine.data("rebootHandler", rebootHandler);
+  if (typeof tokenHandler !== "undefined")
+    Alpine.data("tokenHandler", tokenHandler);
 });

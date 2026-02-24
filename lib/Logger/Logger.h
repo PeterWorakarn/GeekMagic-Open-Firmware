@@ -24,6 +24,9 @@
 
 enum LogLevel { LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR };
 
+static constexpr size_t LOG_BUFFER_MAX_ENTRIES = 50;
+static constexpr size_t LOG_ENTRY_MAX_LEN = 128;
+
 class Logger {
    public:
     static void log(LogLevel level, const char* message, const char* className = nullptr);
@@ -32,9 +35,19 @@ class Logger {
     static void warn(const char* message, const char* className = nullptr);
     static void error(const char* message, const char* className = nullptr);
 
+    static String getLogsAsString();
+    static size_t getLogCount();
+    static const char* getLogEntry(size_t index);
+    static void clearLogs();
+
    private:
     static void printTime();
     static const char* levelToString(LogLevel level);
+    static void addToBuffer(const char* entry);
+
+    static char _logBuffer[LOG_BUFFER_MAX_ENTRIES][LOG_ENTRY_MAX_LEN];
+    static size_t _head;
+    static size_t _count;
 };
 
 #endif  // LOGGER_H
