@@ -87,20 +87,15 @@ void setup() {
     Serial.println("");
     Logger::info(("GeekMagic Open Firmware " + String(PROJECT_VER_STR)).c_str());
 
-    DisplayManager::begin();
-
     constexpr int TOTAL_STEPS = 6;
     int step = 0;
 
     if (!LittleFS.begin()) {
-        DisplayManager::drawLoadingBar((float)step / TOTAL_STEPS, LOADING_BAR_Y);
         Logger::error("Failed to mount LittleFS");
         return;
     }
 
     step++;
-
-    SecureStorage::setSalt(KV_SALT);
 
     if (configManager.secure.begin()) {
         Logger::info("SecureStorage initialized successfully", "ConfigManager");
@@ -111,6 +106,15 @@ void setup() {
     if (configManager.load()) {
         Logger::info("Configuration loaded successfully");
     }
+
+    DisplayManager::begin();
+
+    DisplayManager::drawLoadingBar((float)step / TOTAL_STEPS, LOADING_BAR_Y);
+    
+    step++;
+
+    SecureStorage::setSalt(KV_SALT);
+
     step++;
 
     DisplayManager::drawTextWrapped(LOADING_BAR_TEXT_X, LOADING_BAR_TEXT_Y, "Starting...", 2, LCD_WHITE, LCD_BLACK,
