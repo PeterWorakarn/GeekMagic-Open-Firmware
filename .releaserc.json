@@ -1,5 +1,7 @@
 {
-  "branches": ["main"],
+  "branches": [
+    "main"
+  ],
   "plugins": [
     "@semantic-release/commit-analyzer",
     "@semantic-release/release-notes-generator",
@@ -12,8 +14,12 @@
             "label": "Firmware binary"
           },
           {
-            "path": "**/littlefs.bin",
-            "label": "LittleFS partition binary"
+            "path": "**/littlefs-hellocubic.bin",
+            "label": "LittleFS - HelloCubic"
+          },
+          {
+            "path": "**/littlefs-smartTV.bin",
+            "label": "LittleFS - SmallTV Ultra"
           },
           {
             "path": "**/project.checksum",
