@@ -386,7 +386,10 @@ static void lcdEnsureInit() {
 
     g_lcd.setRotation(rotation);
 
-    Logger::info(("Width=" + String(g_lcd.width()) + " height=" + String(g_lcd.height())).c_str(), "DisplayManager");
+    Logger::info(
+        ("Width=" + String(g_lcd.width()) + " height=" + String(g_lcd.height()) + " rotation=" + String(rotation))
+            .c_str(),
+        "DisplayManager");
 
     g_lcd.fillScreen(LCD_BLACK);
     g_lcd.setTextColor(LCD_WHITE, LCD_BLACK);
