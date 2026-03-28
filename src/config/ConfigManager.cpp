@@ -137,6 +137,15 @@ auto ConfigManager::getApiToken() const -> const char* { return api_token.c_str(
 auto ConfigManager::getLCDRotation() const -> uint8_t { return lcd_rotation; }
 
 /**
+ * @brief Set LCD rotation in memory
+ *
+ * @param newRotation Rotation value in range [0, 7]
+ *
+ * @return void
+ */
+auto ConfigManager::setLCDRotation(uint8_t newRotation) -> void { lcd_rotation = newRotation; }
+
+/**
  * @brief Set WiFi credentials in memory
  * @param newSsid The SSID
  * @param newPassword The password

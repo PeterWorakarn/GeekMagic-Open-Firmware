@@ -70,68 +70,86 @@ void registerApiEndpoints(Webserver* webserver) {
 
     // @openapi {post} /wifi/connect version=v1 group=WiFi summary="Connect to a WiFi network" requiresAuth=true
     // requestBody=application/json requestBodySchema=ssid:string,password:string
-    // example={"ssid":"MyNetwork","password":"password123"} responses=200:application/json,400:application/json,401:application/json
+    // example={"ssid":"MyNetwork","password":"password123"}
+    // responses=200:application/json,400:application/json,401:application/json
     webserver->raw().on("/api/v1/wifi/connect", HTTP_POST, [webserver]() { handleWifiConnect(webserver); });
 
     // @openapi {get} /wifi/status version=v1 group=WiFi summary="Get WiFi connection status" requiresAuth=true
     // responses=200:application/json,401:application/json
     webserver->raw().on("/api/v1/wifi/status", HTTP_GET, [webserver]() { handleWifiStatus(webserver); });
 
-    // @openapi {post} /ntp/sync version=v1 group=NTP summary="Trigger NTP sync" requiresAuth=true responses=200:application/json,401:application/json
+    // @openapi {post} /ntp/sync version=v1 group=NTP summary="Trigger NTP sync" requiresAuth=true
+    // responses=200:application/json,401:application/json
     webserver->raw().on("/api/v1/ntp/sync", HTTP_POST, [webserver]() { handleNtpSync(webserver); });
 
-    // @openapi {get} /ntp/status version=v1 group=NTP summary="Get NTP status" requiresAuth=true responses=200:application/json,401:application/json
+    // @openapi {get} /ntp/status version=v1 group=NTP summary="Get NTP status" requiresAuth=true
+    // responses=200:application/json,401:application/json
     webserver->raw().on("/api/v1/ntp/status", HTTP_GET, [webserver]() { handleNtpStatus(webserver); });
 
-    // @openapi {get} /ntp/config version=v1 group=NTP summary="Get NTP configuration" requiresAuth=true responses=200:application/json,401:application/json
+    // @openapi {get} /ntp/config version=v1 group=NTP summary="Get NTP configuration" requiresAuth=true
+    // responses=200:application/json,401:application/json
     webserver->raw().on("/api/v1/ntp/config", HTTP_GET, [webserver]() { handleNtpConfigGet(webserver); });
 
-    // @openapi {post} /ntp/config version=v1 group=NTP summary="Set NTP configuration" requiresAuth=true requestBody=application/json
-    // requestBodySchema=ntp_server:string example={"ntp_server":"pool.ntp.org"}
+    // @openapi {post} /ntp/config version=v1 group=NTP summary="Set NTP configuration" requiresAuth=true
+    // requestBody=application/json requestBodySchema=ntp_server:string example={"ntp_server":"pool.ntp.org"}
     // responses=200:application/json,400:application/json,401:application/json
     webserver->raw().on("/api/v1/ntp/config", HTTP_POST, [webserver]() { handleNtpConfigSet(webserver); });
 
-    // @openapi {post} /reboot version=v1 group=System summary="Reboot the device" requiresAuth=true responses=200:application/json,401:application/json
+    // @openapi {get} /display/rotation version=v1 group=Display summary="Get display rotation" requiresAuth=true
+    // responses=200:application/json,401:application/json
+    webserver->raw().on("/api/v1/display/rotation", HTTP_GET, [webserver]() { handleDisplayRotationGet(webserver); });
+
+    // @openapi {post} /display/rotation version=v1 group=Display summary="Set display rotation" requiresAuth=true
+    // requestBody=application/json requestBodySchema=rotation:integer example={"rotation":4}
+    // responses=200:application/json,400:application/json,401:application/json
+    webserver->raw().on("/api/v1/display/rotation", HTTP_POST, [webserver]() { handleDisplayRotationSet(webserver); });
+
+    // @openapi {post} /reboot version=v1 group=System summary="Reboot the device" requiresAuth=true
+    // responses=200:application/json,401:application/json
     webserver->raw().on("/api/v1/reboot", HTTP_POST, [webserver]() { handleReboot(webserver); });
 
-    // @openapi {post} /ota/fw version=v1 group=OTA summary="Upload firmware (OTA)" requiresAuth=true requestBody=multipart/form-data
-    // responses=200:application/json,401:application/json
+    // @openapi {post} /ota/fw version=v1 group=OTA summary="Upload firmware (OTA)" requiresAuth=true
+    // requestBody=multipart/form-data responses=200:application/json,401:application/json
     webserver->raw().on(
         "/api/v1/ota/fw", HTTP_POST, [webserver]() { handleOtaFinished(webserver); },
         [webserver]() { handleOtaUpload(webserver, U_FLASH); });
 
-    // @openapi {post} /ota/fs version=v1 group=OTA summary="Upload filesystem (OTA)" requiresAuth=true requestBody=multipart/form-data
-    // responses=200:application/json,401:application/json
+    // @openapi {post} /ota/fs version=v1 group=OTA summary="Upload filesystem (OTA)" requiresAuth=true
+    // requestBody=multipart/form-data responses=200:application/json,401:application/json
     webserver->raw().on(
         "/api/v1/ota/fs", HTTP_POST, [webserver]() { handleOtaFinished(webserver); },
         [webserver]() { handleOtaUpload(webserver, U_FS); });
 
-    // @openapi {get} /ota/status version=v1 group=OTA summary="Get OTA status" requiresAuth=true responses=200:application/json,401:application/json
+    // @openapi {get} /ota/status version=v1 group=OTA summary="Get OTA status" requiresAuth=true
+    // responses=200:application/json,401:application/json
     webserver->raw().on("/api/v1/ota/status", HTTP_GET, [webserver]() { handleOtaStatus(webserver); });
 
-    // @openapi {post} /ota/cancel version=v1 group=OTA summary="Cancel OTA" requiresAuth=true responses=200:application/json,401:application/json
+    // @openapi {post} /ota/cancel version=v1 group=OTA summary="Cancel OTA" requiresAuth=true
+    // responses=200:application/json,401:application/json
     webserver->raw().on("/api/v1/ota/cancel", HTTP_POST, [webserver]() { handleOtaCancel(webserver); });
 
-    // @openapi {post} /gif version=v1 group=GIF summary="Upload a GIF" requiresAuth=true requestBody=multipart/form-data
-    // responses=200:application/json,401:application/json
+    // @openapi {post} /gif version=v1 group=GIF summary="Upload a GIF" requiresAuth=true
+    // requestBody=multipart/form-data responses=200:application/json,401:application/json
     webserver->raw().on(
         "/api/v1/gif", HTTP_POST, [webserver]() { handleGifUpload(webserver); },
         [webserver]() { handleGifUpload(webserver); });
 
-    // @openapi {post} /gif/play version=v1 group=GIF summary="Play a GIF by name" requiresAuth=true requestBody=application/json
-    // requestBodySchema=name:string example={"name":"animation.gif"}
+    // @openapi {post} /gif/play version=v1 group=GIF summary="Play a GIF by name" requiresAuth=true
+    // requestBody=application/json requestBodySchema=name:string example={"name":"animation.gif"}
     // responses=200:application/json,400:application/json,401:application/json,404:application/json
     webserver->raw().on("/api/v1/gif/play", HTTP_POST, [webserver]() { handlePlayGif(webserver); });
 
-    // @openapi {post} /gif/stop version=v1 group=GIF summary="Stop GIF playback" requiresAuth=true responses=200:application/json,401:application/json
+    // @openapi {post} /gif/stop version=v1 group=GIF summary="Stop GIF playback" requiresAuth=true
+    // responses=200:application/json,401:application/json
     webserver->raw().on("/api/v1/gif/stop", HTTP_POST, [webserver]() { handleStopGif(webserver); });
 
-    // @openapi {delete} /gif version=v1 group=GIF summary="Delete a GIF by name" requiresAuth=true requestBody=application/json
-    // requestBodySchema=name:string example={"name":"animation.gif"}
+    // @openapi {delete} /gif version=v1 group=GIF summary="Delete a GIF by name" requiresAuth=true
+    // requestBody=application/json requestBodySchema=name:string example={"name":"animation.gif"}
     // responses=200:application/json,400:application/json,401:application/json,404:application/json
     webserver->raw().on("/api/v1/gif", HTTP_DELETE, [webserver]() { handleDeleteGif(webserver); });
 
-    // @openapi {get} /gif version=v1 group=GIF summary="List GIFs" requiresAuth=true responses=200:application/json,401:application/json
+    // @openapi {get} /gif version=v1 group=GIF summary="List GIFs" requiresAuth=true
+    // responses=200:application/json,401:application/json
     webserver->raw().on("/api/v1/gif", HTTP_GET, [webserver]() { handleListGifs(webserver); });
 
     // @openapi {get} /token/check version=v1 group=Authentication summary="Check bearer token validity"
@@ -224,8 +242,7 @@ static auto requireBearerToken(Webserver* webserver) -> bool {
     setCorsHeaders(webserver);
     webserver->raw().send(HTTP_CODE_UNAUTHORIZED, "application/json", json);
 
-    Logger::warn(
-        ("Unauthorized request from " + webserver->raw().client().remoteIP().toString()).c_str(), "API");
+    Logger::warn(("Unauthorized request from " + webserver->raw().client().remoteIP().toString()).c_str(), "API");
 
     return false;
 }
@@ -810,6 +827,116 @@ void handleNtpConfigSet(Webserver* webserver) {
 
     setCorsHeaders(webserver);
     webserver->raw().send(HTTP_CODE_OK, "application/json", json);
+}
+
+/**
+ * @brief Get display rotation configuration
+ */
+void handleDisplayRotationGet(Webserver* webserver) {
+    if (!requireBearerToken(webserver)) {
+        return;
+    }
+
+    JsonDocument doc;
+    doc["rotation"] = configManager.getLCDRotationSafe();
+
+    String json;
+    serializeJson(doc, json);
+
+    setCorsHeaders(webserver);
+    webserver->raw().send(HTTP_CODE_OK, "application/json", json);
+}
+
+/**
+ * @brief Set display rotation configuration
+ */
+void handleDisplayRotationSet(Webserver* webserver) {
+    if (!requireBearerToken(webserver)) {
+        return;
+    }
+
+    if (!webserver->raw().hasArg("plain") || webserver->raw().arg("plain").length() == 0) {
+        JsonDocument doc;
+        doc["status"] = "error";
+        doc["message"] = "Missing JSON body";
+
+        String json;
+        serializeJson(doc, json);
+
+        setCorsHeaders(webserver);
+        webserver->raw().send(HTTP_CODE_BAD_REQUEST, "application/json", json);
+
+        return;
+    }
+
+    String body = webserver->raw().arg("plain");
+    JsonDocument ddoc;
+    DeserializationError err = deserializeJson(ddoc, body);
+
+    if (err || !ddoc["rotation"].is<int>()) {
+        JsonDocument doc;
+        doc["status"] = "error";
+        doc["message"] = "Invalid JSON or missing rotation";
+
+        String json;
+        serializeJson(doc, json);
+
+        setCorsHeaders(webserver);
+        webserver->raw().send(HTTP_CODE_BAD_REQUEST, "application/json", json);
+
+        return;
+    }
+
+    int rotation = ddoc["rotation"].as<int>();
+    if (rotation < 0 || rotation > 7) {
+        JsonDocument doc;
+        doc["status"] = "error";
+        doc["message"] = "rotation must be between 0 and 7";
+
+        String json;
+        serializeJson(doc, json);
+
+        setCorsHeaders(webserver);
+        webserver->raw().send(HTTP_CODE_BAD_REQUEST, "application/json", json);
+
+        return;
+    }
+
+    uint8_t newRotation = static_cast<uint8_t>(rotation);
+    configManager.setLCDRotation(newRotation);
+    String currentIP = "unknown";
+
+    if (wifiManager != nullptr) {
+        currentIP = wifiManager->getIP().toString();
+    }
+
+    DisplayManager::setRotation(newRotation, currentIP);
+
+    if (!configManager.save()) {
+        JsonDocument doc;
+        doc["status"] = "error";
+        doc["message"] = "Failed to save config";
+
+        String json;
+        serializeJson(doc, json);
+
+        setCorsHeaders(webserver);
+        webserver->raw().send(HTTP_CODE_INTERNAL_ERROR, "application/json", json);
+
+        return;
+    }
+
+    JsonDocument doc;
+    doc["status"] = "ok";
+    doc["rotation"] = newRotation;
+
+    String json;
+    serializeJson(doc, json);
+
+    setCorsHeaders(webserver);
+    webserver->raw().send(HTTP_CODE_OK, "application/json", json);
+
+    Logger::info(("Display rotation updated to " + String(newRotation)).c_str(), "API");
 }
 
 /**

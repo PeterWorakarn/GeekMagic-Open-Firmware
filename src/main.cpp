@@ -87,13 +87,15 @@ void setup() {
     Serial.println("");
     Logger::info(("GeekMagic Open Firmware " + String(PROJECT_VER_STR)).c_str());
 
-    constexpr int TOTAL_STEPS = 6;
+    constexpr int TOTAL_STEPS = 5;
     int step = 0;
 
     if (!LittleFS.begin()) {
         Logger::error("Failed to mount LittleFS");
         return;
     }
+
+    SecureStorage::setSalt(KV_SALT);
 
     step++;
 
@@ -110,10 +112,6 @@ void setup() {
     DisplayManager::begin();
 
     DisplayManager::drawLoadingBar((float)step / TOTAL_STEPS, LOADING_BAR_Y);
-    
-    step++;
-
-    SecureStorage::setSalt(KV_SALT);
 
     step++;
 
@@ -138,7 +136,6 @@ void setup() {
     initial_free_heap = ESP.getFreeHeap();  // NOLINT(readability-static-accessed-through-instance)
 
     DisplayManager::drawLoadingBar((float)step / TOTAL_STEPS, LOADING_BAR_Y);
-    step++;
 
     registerApiEndpoints(webserver);
 
@@ -153,6 +150,7 @@ void setup() {
     webserver->serveStaticC("/wifi.html", "/web/wifi.html", "text/html");
     webserver->serveStaticC("/token.html", "/web/token.html", "text/html");
     webserver->serveStaticC("/ntp.html", "/web/ntp.html", "text/html");
+    webserver->serveStaticC("/rotation.html", "/web/rotation.html", "text/html");
     webserver->serveStaticC("/logs.html", "/web/logs.html", "text/html");
     webserver->serveStaticC("/config.json", "/config.json", "application/json");
 

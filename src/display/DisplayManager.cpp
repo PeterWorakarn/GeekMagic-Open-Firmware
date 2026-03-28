@@ -548,6 +548,20 @@ static void lcdDrawTextWrapped(int16_t startX, int16_t startY, const String& tex
 auto DisplayManager::begin() -> void { lcdEnsureInit(); }
 
 /**
+ * @brief Apply a new display rotation at runtime
+ *
+ * @param rotation Rotation value in range [0, 7]
+ *
+ * @return void
+ */
+auto DisplayManager::setRotation(uint8_t rotation, String currentIP) -> void {
+    g_lcd.setRotation(rotation);
+    DisplayManager::drawStartup(currentIP);
+
+    Logger::info(("Rotation set to " + String(rotation)).c_str(), "DisplayManager");
+}
+
+/**
  * @brief Draw the startup screen on the LCD
  *
  * @return void

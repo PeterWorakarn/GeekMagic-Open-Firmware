@@ -50,6 +50,7 @@ class ConfigManager {
     const char* getApiToken() const;
     void setApiToken(const char* newApiToken);
     uint8_t getLCDRotation() const;
+    void setLCDRotation(uint8_t newRotation);
     uint32_t getLCDSpiHz() const;
 
    public:

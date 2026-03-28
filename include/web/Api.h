@@ -43,6 +43,8 @@ void handleNtpSync(Webserver* webserver);
 void handleNtpStatus(Webserver* webserver);
 void handleNtpConfigGet(Webserver* webserver);
 void handleNtpConfigSet(Webserver* webserver);
+void handleDisplayRotationGet(Webserver* webserver);
+void handleDisplayRotationSet(Webserver* webserver);
 
 void handleTokenCheck(Webserver* webserver);
 void handleTokenSave(Webserver* webserver);

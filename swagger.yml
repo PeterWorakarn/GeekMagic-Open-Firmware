@@ -204,6 +204,68 @@ paths:
               example:
                 ntp_server: "pool.ntp.org"
         required: true
+  /api/v1/display/rotation:
+    get:
+      summary: "Get display rotation"
+      operationId: "op_v1_get_api_v1_display_rotation"
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: "object"
+        401:
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: "object"
+      tags:
+        - "Display"
+      security:
+        - bearerAuth: []
+      description: "**Requires Authentication** - Get display rotation. This endpoint requires a valid bearer token in the Authorization header."
+    post:
+      summary: "Set display rotation"
+      operationId: "op_v1_post_api_v1_display_rotation"
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: "object"
+        400:
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: "object"
+        401:
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: "object"
+      tags:
+        - "Display"
+      security:
+        - bearerAuth: []
+      description: "**Requires Authentication** - Set display rotation. This endpoint requires a valid bearer token in the Authorization header."
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: "object"
+              properties:
+                rotation:
+                  type: "integer"
+              required:
+                - "rotation"
+              example:
+                rotation: 4
+        required: true
   /api/v1/reboot:
     post:
       summary: "Reboot the device"
