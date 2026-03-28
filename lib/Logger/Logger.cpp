@@ -19,11 +19,24 @@
 
 #include <ctime>
 #include <cstring>
+#include <cstdlib>
 #include "Logger.h"
 
-char Logger::_logBuffer[LOG_BUFFER_MAX_ENTRIES][LOG_ENTRY_MAX_LEN];
+char* Logger::_logBuffer = nullptr;
 size_t Logger::_head = 0;
 size_t Logger::_count = 0;
+
+void Logger::ensureBufferAllocated() {
+    if (_logBuffer != nullptr) {
+        return;
+    }
+
+    const size_t totalSize = LOG_BUFFER_MAX_ENTRIES * LOG_ENTRY_MAX_LEN;
+    _logBuffer = static_cast<char*>(std::malloc(totalSize));
+    if (_logBuffer != nullptr) {
+        memset(_logBuffer, 0, totalSize);
+    }
+}
 
 /**
  * @brief Logs a message with a specified log level
@@ -43,7 +56,9 @@ void Logger::log(LogLevel level, const char* message, const char* className) {
 
     snprintf(entry, sizeof(entry), "%s(%s)::%s: %s", timeBuf, levelToString(level), classStr, message);
 
-    addToBuffer(entry);
+    if (level >= LOG_MIN_LEVEL) {
+        addToBuffer(entry);
+    }
 
     Serial.println(entry);
 }
@@ -97,8 +112,14 @@ void Logger::printTime() {
  * @param entry The log entry string
  */
 void Logger::addToBuffer(const char* entry) {
-    strncpy(_logBuffer[_head], entry, LOG_ENTRY_MAX_LEN - 1);
-    _logBuffer[_head][LOG_ENTRY_MAX_LEN - 1] = '\0';
+    ensureBufferAllocated();
+    if (_logBuffer == nullptr) {
+        return;
+    }
+
+    char* slot = _logBuffer + (_head * LOG_ENTRY_MAX_LEN);
+    strncpy(slot, entry, LOG_ENTRY_MAX_LEN - 1);
+    slot[LOG_ENTRY_MAX_LEN - 1] = '\0';
 
     _head = (_head + 1) % LOG_BUFFER_MAX_ENTRIES;
     if (_count < LOG_BUFFER_MAX_ENTRIES) {
@@ -135,7 +156,7 @@ size_t Logger::getLogCount() { return _count; }
  * @return Pointer to the log entry string, or nullptr if out of range
  */
 const char* Logger::getLogEntry(size_t index) {
-    if (index >= _count) {
+    if (index >= _count || _logBuffer == nullptr) {
         return nullptr;
     }
     size_t actualIndex;
@@ -144,7 +165,7 @@ const char* Logger::getLogEntry(size_t index) {
     } else {
         actualIndex = (_head + index) % LOG_BUFFER_MAX_ENTRIES;
     }
-    return _logBuffer[actualIndex];
+    return _logBuffer + (actualIndex * LOG_ENTRY_MAX_LEN);
 }
 
 /**
@@ -153,6 +174,11 @@ const char* Logger::getLogEntry(size_t index) {
 void Logger::clearLogs() {
     _head = 0;
     _count = 0;
+
+    if (_logBuffer != nullptr) {
+        std::free(_logBuffer);
+        _logBuffer = nullptr;
+    }
 }
 
 /**
