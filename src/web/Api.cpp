@@ -888,10 +888,14 @@ void handleDisplayRotationSet(Webserver* webserver) {
     }
 
     int rotation = ddoc["rotation"].as<int>();
-    if (rotation < 0 || rotation > 7) {
+    const int rotation_range_min = 0;
+    const int rotation_range_max = 7;
+
+    if (rotation < rotation_range_min || rotation > rotation_range_max) {
         JsonDocument doc;
         doc["status"] = "error";
-        doc["message"] = "rotation must be between 0 and 7";
+        doc["message"] =
+            "rotation must be between " + String(rotation_range_min) + " and " + String(rotation_range_max);
 
         String json;
         serializeJson(doc, json);
@@ -902,7 +906,7 @@ void handleDisplayRotationSet(Webserver* webserver) {
         return;
     }
 
-    uint8_t newRotation = static_cast<uint8_t>(rotation);
+    auto newRotation = static_cast<uint8_t>(rotation);
     configManager.setLCDRotation(newRotation);
     String currentIP = "unknown";
 
