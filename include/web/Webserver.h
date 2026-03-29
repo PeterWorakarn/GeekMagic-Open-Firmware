@@ -62,6 +62,7 @@ class Webserver {
     void serveStaticC(const char* uriC, const char* pathC, const char* contentTypeC = nullptr, int cacheSeconds = 86400,
                       bool tryGzip = true);
     void registerStaticDir(const String& fsDir, const String& uriPrefix, const String& contentType);
+    void registerGenericStaticFallback(const String& fsBasePath = "/web", bool excludeRoot = true);
     void onNotFound(std::function<void()> handler);
     ESP8266WebServer& raw();
     ~Webserver();

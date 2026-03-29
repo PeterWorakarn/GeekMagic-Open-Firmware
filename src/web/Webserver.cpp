@@ -144,8 +144,9 @@ void Webserver::serveStaticC(const char* uriC, const char* pathC, const char* co
         }
 
         if (!LittleFS.exists(chosenPath)) {
-            String msg = String("File not found: ") + chosenPath;
-            Logger::error(msg.c_str(), "Webserver");
+            char msg[320];
+            snprintf(msg, sizeof(msg), "File not found: %s", chosenPath);
+            Logger::error(msg, "Webserver");
             _server.send(HTTP_CODE_NOT_FOUND, "text/plain", "Not found");
 
             return;
@@ -153,8 +154,9 @@ void Webserver::serveStaticC(const char* uriC, const char* pathC, const char* co
 
         File f = LittleFS.open(chosenPath, "r");
         if (!f) {
-            String msg = String("Failed to open file: ") + chosenPath;
-            Logger::error(msg.c_str(), "Webserver");
+            char msg[320];
+            snprintf(msg, sizeof(msg), "Failed to open file: %s", chosenPath);
+            Logger::error(msg, "Webserver");
             _server.send(HTTP_CODE_INTERNAL_ERROR, "text/plain", "Open failed");
 
             return;
@@ -187,8 +189,9 @@ void Webserver::serveStaticC(const char* uriC, const char* pathC, const char* co
         _server.streamFile(f, String(ctBuf));
         f.close();
 
-        String infoMsg = String("Served ") + chosenPath + " for URI: " + uriC;
-        Logger::info(infoMsg.c_str(), "Webserver");
+        char infoMsg[320];
+        snprintf(infoMsg, sizeof(infoMsg), "Served %s for URI: %s", chosenPath, uriC);
+        Logger::info(infoMsg, "Webserver");
     });
 }
 
@@ -208,111 +211,93 @@ void Webserver::registerStaticDir(  // NOLINT(readability-convert-member-functio
     }
 
     String prefix = uriPrefix;
-    if (!prefix.endsWith("/")) {
-        prefix += "/";
+    if (prefix.endsWith("/") && prefix.length() > 1) {
+        prefix = prefix.substring(0, prefix.length() - 1);
     }
 
-    Dir dir = LittleFS.openDir(dirPath);
-
-    struct Entry {
-        String uri;
-        String path;
-        String ct;
-    };
-
-    std::vector<Entry> entries;
-
-    while (dir.next()) {
-        String name = dir.fileName();
-        String base = name.substring(name.lastIndexOf('/') + 1);
-
-        if (base.length() == 0) {
-            continue;
-        }
-
-        String uri = prefix + base;
-        String path = dirPath + String("/") + base;
-
-        if (!LittleFS.exists(path)) {
-            continue;
-        }
-
-        File file = LittleFS.open(path, "r");
-        if (!file) {
-            continue;
-        }
-
-        if (file.isDirectory()) {
-            file.close();
-            continue;
-        }
-        file.close();
-
-        entries.push_back(Entry{uri, path, contentType});
-    }
-
-    if (entries.empty()) {
+    if (!LittleFS.exists(dirPath)) {
+        Logger::warn((String("Static dir not found: ") + dirPath).c_str(), "Webserver");
         return;
     }
 
-    // Compute total size for a single pooled allocation
-    size_t total = 0;
-    for (const auto& e : entries) {
-        total += e.uri.length() + 1;
-        total += e.path.length() + 1;
-        total += e.ct.length() + 1;
+    _server.serveStatic(prefix.c_str(), LittleFS, dirPath.c_str(), "max-age=86400");
+
+    String info = String("Registered static dir: ") + prefix + " -> " + dirPath;
+    if (!contentType.isEmpty()) {
+        info += String(" (ct=") + contentType + ")";
+    }
+    Logger::info(info.c_str(), "Webserver");
+}
+
+/**
+ * @brief Register a generic static fallback route using onNotFound
+ *
+ * Serves GET requests from fsBasePath + request URI. API routes are excluded
+ * Can optionally exclude '/' to keep an explicit root route
+ */
+void Webserver::registerGenericStaticFallback(const String& fsBasePath, bool excludeRoot) {
+    String basePath = fsBasePath;
+    if (basePath.endsWith("/") && basePath.length() > 1) {
+        basePath = basePath.substring(0, basePath.length() - 1);
     }
 
-    char* pool = static_cast<char*>(malloc(total));
-    if (pool == nullptr) {
-        // fallback to previous behavior if allocation fails
-        for (const auto& e : entries) {
-            char* uri_c = strdup(e.uri.c_str());
-            char* path_c = strdup(e.path.c_str());
-            char* ct_c = strdup(e.ct.c_str());
-
-            _staticAllocFallbackPtrs.push_back(uri_c);
-            _staticAllocFallbackPtrs.push_back(path_c);
-            _staticAllocFallbackPtrs.push_back(ct_c);
-
-            serveStaticC(uri_c, path_c, ct_c);
-            Logger::info((String("Registered static: ") + e.uri + " -> " + e.path).c_str(), "Webserver");
+    _server.onNotFound([this, basePath, excludeRoot]() {
+        if (_server.method() == HTTP_OPTIONS) {
+            _server.sendHeader("Access-Control-Allow-Origin", "*");
+            _server.sendHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
+            _server.sendHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+            _server.sendHeader("Access-Control-Max-Age", "3600");
+            _server.send(HTTP_CODE_OK);
+            return;
         }
 
-        return;
-    }
+        if (_server.method() != HTTP_GET) {
+            _server.send(HTTP_CODE_NOT_FOUND, "text/plain", "Not found");
+            return;
+        }
 
-    // copy strings into pool and register routes
-    char* cur = pool;
-    for (const auto& e : entries) {
-        size_t l;
+        const String uri = _server.uri();
 
-        l = e.uri.length();
-        memcpy(cur, e.uri.c_str(), l);
-        cur[l] = '\0';
-        char* uri_c = cur;
-        cur += (l + 1);
+        if (excludeRoot && uri == "/") {
+            _server.send(HTTP_CODE_NOT_FOUND, "text/plain", "Not found");
+            return;
+        }
 
-        l = e.path.length();
-        memcpy(cur, e.path.c_str(), l);
-        cur[l] = '\0';
-        char* path_c = cur;
-        cur += (l + 1);
+        if (uri.startsWith("/api/")) {
+            _server.send(HTTP_CODE_NOT_FOUND, "text/plain", "Not found");
+            return;
+        }
 
-        l = e.ct.length();
-        memcpy(cur, e.ct.c_str(), l);
-        cur[l] = '\0';
-        char* ct_c = cur;
-        cur += (l + 1);
+        String fsPath = basePath + uri;
+        String chosenPath = fsPath;
 
-        // pointers live inside the pool; keep the pool alive below
+        if (LittleFS.exists(fsPath + ".gz")) {
+            chosenPath = fsPath + ".gz";
+        } else if (!LittleFS.exists(fsPath)) {
+            _server.send(HTTP_CODE_NOT_FOUND, "text/plain", "Not found");
+            return;
+        }
 
-        serveStaticC(uri_c, path_c, ct_c);
-        Logger::info((String("Registered static: ") + e.uri + " -> " + e.path).c_str(), "Webserver");
-    }
+        File f = LittleFS.open(chosenPath, "r");
+        if (!f) {
+            _server.send(HTTP_CODE_INTERNAL_ERROR, "text/plain", "Open failed");
+            return;
+        }
 
-    // Keep pool alive until destructor
-    _staticAllocPools.push_back(pool);
+        _server.sendHeader("Cache-Control", "public, max-age=86400");
+
+        if (chosenPath.endsWith(".gz")) {
+            _server.sendHeader("Content-Encoding", "gzip");
+        }
+
+        _server.setContentLength(f.size());
+        _server.streamFile(f, guessContentType(fsPath));
+        f.close();
+
+        char infoMsg[320];
+        snprintf(infoMsg, sizeof(infoMsg), "Served %s for URI: %s", chosenPath.c_str(), uri.c_str());
+        Logger::info(infoMsg, "Webserver");
+    });
 }
 
 /**

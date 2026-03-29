@@ -78,6 +78,16 @@ static void formatBytes(size_t value, char* outBuf, size_t outBufSize) {
 }
 
 /**
+ * @brief Check whether LittleFS contains at least one entry
+ *
+ * @return true if filesystem root has any file/dir entry
+ */
+static auto littleFsHasEntries() -> bool {
+    Dir dir = LittleFS.openDir("/");
+    return dir.next();
+}
+
+/**
  * @brief Initializes the system
  *
  */
@@ -89,10 +99,15 @@ void setup() {
 
     constexpr int TOTAL_STEPS = 5;
     int step = 0;
+    const bool littleFsMounted = LittleFS.begin();
+    bool littleFsReadyForStatic = littleFsMounted;
 
-    if (!LittleFS.begin()) {
+    if (!littleFsMounted) {
         Logger::error("Failed to mount LittleFS");
-        return;
+        Logger::warn("LittleFS unavailable, static web UI disabled", "Global");
+    } else if (!littleFsHasEntries()) {
+        littleFsReadyForStatic = false;
+        Logger::warn("LittleFS mounted but empty, static web UI disabled", "Global");
     }
 
     SecureStorage::setSalt(KV_SALT);
@@ -139,23 +154,17 @@ void setup() {
 
     registerApiEndpoints(webserver);
 
-    httpUpdater.setup(&webserver->raw(), "/legacyupdate");
+    if (!littleFsReadyForStatic) {
+        httpUpdater.setup(&webserver->raw(), "/legacyupdate");
+        Logger::warn("Enabled legacy OTA route because LittleFS is unavailable or empty", "Global");
+    } else {
+        webserver->serveStaticC("/", "/web/index.html", "text/html");
+        webserver->serveStaticC("/config.json", "/config.json", "application/json");
 
-    webserver->serveStaticC("/", "/web/index.html", "text/html");
-    webserver->serveStaticC("/header.html", "/web/header.html", "text/html");
-    webserver->serveStaticC("/footer.html", "/web/footer.html", "text/html");
-    webserver->serveStaticC("/index.html", "/web/index.html", "text/html");
-    webserver->serveStaticC("/update.html", "/web/update.html", "text/html");
-    webserver->serveStaticC("/gif_upload.html", "/web/gif_upload.html", "text/html");
-    webserver->serveStaticC("/wifi.html", "/web/wifi.html", "text/html");
-    webserver->serveStaticC("/token.html", "/web/token.html", "text/html");
-    webserver->serveStaticC("/ntp.html", "/web/ntp.html", "text/html");
-    webserver->serveStaticC("/rotation.html", "/web/rotation.html", "text/html");
-    webserver->serveStaticC("/logs.html", "/web/logs.html", "text/html");
-    webserver->serveStaticC("/config.json", "/config.json", "application/json");
-
-    webserver->registerStaticDir("/web/css", "/css", "text/css");
-    webserver->registerStaticDir("/web/js", "/js", "application/javascript");
+        webserver->registerStaticDir("/web/css", "/css", "text/css");
+        webserver->registerStaticDir("/web/js", "/js", "application/javascript");
+        webserver->registerGenericStaticFallback("/web", true);
+    }
 
     DisplayManager::drawLoadingBar(1.0F, LOADING_BAR_Y);
 
