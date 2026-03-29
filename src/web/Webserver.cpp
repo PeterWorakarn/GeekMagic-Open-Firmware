@@ -235,7 +235,8 @@ void Webserver::registerStaticDir(  // NOLINT(readability-convert-member-functio
  * Serves GET requests from fsBasePath + request URI. API routes are excluded
  * Can optionally exclude '/' to keep an explicit root route
  */
-void Webserver::registerGenericStaticFallback(const String& fsBasePath, bool excludeRoot) {
+void Webserver::registerGenericStaticFallback(  // NOLINT(readability-convert-member-functions-to-static)
+    const String& fsBasePath, bool excludeRoot) {
     String basePath = fsBasePath;
     if (basePath.endsWith("/") && basePath.length() > 1) {
         basePath = basePath.substring(0, basePath.length() - 1);
