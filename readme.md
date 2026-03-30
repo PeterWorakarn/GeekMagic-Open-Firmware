@@ -87,10 +87,31 @@ The display is connected to the ESP8266 using the following GPIO pins:
 | **RST**       | GPIO 2   | Reset pin                                             |
 | **Backlight** | GPIO 5   | Backlight control (Active LOW)                        |
 
+### ESP8266 dev board wiring example
+
+For a common ESP8266 dev board such as a NodeMCU or ESP-12E development board, wire the TFT module like this:
+
+| TFT pin        | ESP8266 GPIO | Common dev board label | Notes                                      |
+| -------------- | ------------ | ---------------------- | ------------------------------------------ |
+| **GND**        | GND          | GND                    | Ground                                     |
+| **VCC**        | 3V3          | 3V3                    | Power the display from 3.3V                |
+| **SCL / SCK**  | GPIO 14      | D5                     | SPI clock                                  |
+| **SDA / MOSI** | GPIO 13      | D7                     | SPI data from ESP8266 to display           |
+| **DC**         | GPIO 0       | D3                     | Data/command select                        |
+| **RES / RST**  | GPIO 2       | D4                     | Display reset                              |
+| **BLK**        | GPIO 5       | D1                     | Optional backlight control, see note below |
+
+If your module has no **CS** pin, or if **CS** is already tied low on the PCB, no extra wiring is needed for chip select.
+
+Many 1.3" ST7789 modules keep the backlight enabled when **BLK** is left floating. In that case the screen will work without connecting **BLK** at all. If you want firmware-controlled backlight, connect **BLK** to GPIO 5.
+
+Be aware that **GPIO 0** and **GPIO 2** are ESP8266 boot strap pins. This wiring matches the original hardware used by the firmware, but if your module pulls either line to the wrong level during reset the ESP8266 may fail to boot.
+
 <div align="center">
    <img src=".github/assets/03-pinout.jpg" alt="Pinout Diagram" width="1000" />
+   <img src=".github/assets/03-nodemcu.png" alt="NodeMCU working" width="500" />
    <br>
-   <em>Pin Wiring Diagram (exact same for small tv)</em>
+   <em>Pin Wiring Diagram (exact same for small tv) && NodeMCU working</em>
 </div>
 
 ### Important configuration details
