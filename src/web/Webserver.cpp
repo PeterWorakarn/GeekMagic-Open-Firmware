@@ -27,28 +27,9 @@
 
 #include "web/Webserver.h"
 
-/**
- * @brief Construct a new Webserver object
- * @param port Port number to listen on
- *
- * @return void
- */
-Webserver::~Webserver()  // NOLINT(modernize-use-equals-default)
-{
-    for (char* p : _staticAllocFallbackPtrs) {
-        if (p != nullptr) {
-            free(p);
-        }
-    }
-    _staticAllocFallbackPtrs.clear();
-
-    for (char* pool : _staticAllocPools) {
-        if (pool != nullptr) {
-            free(pool);
-        }
-    }
-    _staticAllocPools.clear();
-}
+static constexpr size_t URI_BUF_SIZE = 192;
+static constexpr size_t PATH_BUF_SIZE = 256;
+static constexpr bool LOG_STATIC_HIT_INFO = false;
 
 Webserver::Webserver(uint16_t port) : _server(port) {}
 
@@ -113,35 +94,18 @@ void Webserver::on(const String& uri, std::function<void()> handler) {
 }
 
 /**
- * @brief Serve a static file from LittleFS using C-strings. If a .gz variant exists, serve it with gzip encoding
+ * @brief Serve a static file from LittleFS using C-strings
  * @param uriC The URL path
  * @param pathC The filesystem path
  * @param contentTypeC The content type to use. If nullptr or empty string, it will be derived from the file extension
  * @param cacheSeconds The number of seconds to cache the file (0 = no-cache)
- * @param tryGzip Whether to try serving a .gz variant if it exists
  *
  * @return void
  */
-void Webserver::serveStaticC(const char* uriC, const char* pathC, const char* contentTypeC, int cacheSeconds,
-                             bool tryGzip) {
-    _server.on(uriC, HTTP_GET, [this, pathC, contentTypeC, cacheSeconds, tryGzip, uriC]() {
-        char servePath[256];
-        char gzPath[260];
+void Webserver::serveStaticC(const char* uriC, const char* pathC, const char* contentTypeC, int cacheSeconds) {
+    _server.on(uriC, HTTP_GET, [this, pathC, contentTypeC, cacheSeconds, uriC]() {
         const char* chosenPath = pathC;
         const char* contentTypeStr = contentTypeC;
-
-        // compute gz path if requested
-        if (tryGzip) {
-            size_t l = strnlen(pathC, sizeof(servePath) - 1);
-            if (l + 4 < sizeof(gzPath)) {
-                memcpy(gzPath, pathC, l);
-                gzPath[l] = '\0';
-                strcat(gzPath, ".gz");
-                if (LittleFS.exists(gzPath)) {
-                    chosenPath = gzPath;
-                }
-            }
-        }
 
         if (!LittleFS.exists(chosenPath)) {
             char msg[320];
@@ -164,34 +128,32 @@ void Webserver::serveStaticC(const char* uriC, const char* pathC, const char* co
 
         size_t size = f.size();
 
-        char ctBuf[64] = {0};
-        if (contentTypeStr != nullptr && contentTypeStr[0] != '\0') {
-            strncpy(ctBuf, contentTypeStr, sizeof(ctBuf) - 1);
-        } else {
-            String guessed = guessContentType(String(chosenPath));
-            strncpy(ctBuf, guessed.c_str(), sizeof(ctBuf) - 1);
+        const char* contentTypeResolved = contentTypeStr;
+        if (contentTypeResolved == nullptr || contentTypeResolved[0] == '\0') {
+            contentTypeResolved = guessContentTypeC(chosenPath);
         }
 
         if (cacheSeconds > 0) {
-            char headerVal[64];
-            snprintf(headerVal, sizeof(headerVal), "public, max-age=%d", cacheSeconds);
-            _server.sendHeader("Cache-Control", String(headerVal));
+            if (cacheSeconds == 86400) {
+                _server.sendHeader("Cache-Control", "public, max-age=86400");
+            } else {
+                char headerVal[64];
+                snprintf(headerVal, sizeof(headerVal), "public, max-age=%d", cacheSeconds);
+                _server.sendHeader("Cache-Control", String(headerVal));
+            }
         } else {
             _server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
         }
 
-        // Content-Encoding header when gz served
-        if (chosenPath == gzPath) {
-            _server.sendHeader("Content-Encoding", "gzip");
-        }
-
         _server.setContentLength(size);
-        _server.streamFile(f, String(ctBuf));
+        _server.streamFile(f, contentTypeResolved);
         f.close();
 
-        char infoMsg[320];
-        snprintf(infoMsg, sizeof(infoMsg), "Served %s for URI: %s", chosenPath, uriC);
-        Logger::info(infoMsg, "Webserver");
+        if (LOG_STATIC_HIT_INFO) {
+            char infoMsg[320];
+            snprintf(infoMsg, sizeof(infoMsg), "Served %s for URI: %s", chosenPath, uriC);
+            Logger::info(infoMsg, "Webserver");
+        }
     });
 }
 
@@ -257,7 +219,7 @@ void Webserver::registerGenericStaticFallback(  // NOLINT(readability-convert-me
             return;
         }
 
-        const String uri = _server.uri();
+        const String& uri = _server.uri();
 
         if (excludeRoot && uri == "/") {
             _server.send(HTTP_CODE_NOT_FOUND, "text/plain", "Not found");
@@ -269,12 +231,20 @@ void Webserver::registerGenericStaticFallback(  // NOLINT(readability-convert-me
             return;
         }
 
-        String fsPath = basePath + uri;
-        String chosenPath = fsPath;
+        char uriBuf[URI_BUF_SIZE] = {0};
+        char fsPath[PATH_BUF_SIZE] = {0};
+        char chosenPath[PATH_BUF_SIZE] = {0};
 
-        if (LittleFS.exists(fsPath + ".gz")) {
-            chosenPath = fsPath + ".gz";
-        } else if (!LittleFS.exists(fsPath)) {
+        strncpy(uriBuf, uri.c_str(), sizeof(uriBuf) - 1);
+
+        if (snprintf(fsPath, sizeof(fsPath), "%s%s", basePath.c_str(), uriBuf) <= 0) {
+            _server.send(HTTP_CODE_INTERNAL_ERROR, "text/plain", "Path error");
+            return;
+        }
+
+        if (LittleFS.exists(fsPath)) {
+            strncpy(chosenPath, fsPath, sizeof(chosenPath) - 1);
+        } else {
             _server.send(HTTP_CODE_NOT_FOUND, "text/plain", "Not found");
             return;
         }
@@ -287,17 +257,15 @@ void Webserver::registerGenericStaticFallback(  // NOLINT(readability-convert-me
 
         _server.sendHeader("Cache-Control", "public, max-age=86400");
 
-        if (chosenPath.endsWith(".gz")) {
-            _server.sendHeader("Content-Encoding", "gzip");
-        }
-
         _server.setContentLength(f.size());
-        _server.streamFile(f, guessContentType(fsPath));
+        _server.streamFile(f, guessContentTypeC(fsPath));
         f.close();
 
-        char infoMsg[320];
-        snprintf(infoMsg, sizeof(infoMsg), "Served %s for URI: %s", chosenPath.c_str(), uri.c_str());
-        Logger::info(infoMsg, "Webserver");
+        if (LOG_STATIC_HIT_INFO) {
+            char infoMsg[320];
+            snprintf(infoMsg, sizeof(infoMsg), "Served %s for URI: %s", chosenPath, uriBuf);
+            Logger::info(infoMsg, "Webserver");
+        }
     });
 }
 
@@ -318,50 +286,65 @@ void Webserver::onNotFound(std::function<void()> handler) {
  */
 auto Webserver::raw() -> ESP8266WebServer& { return _server; }
 
-/**
- * @brief Guess the content type based on the file extension
- * @param path The file path
- *
- * @return The guessed content type
- */
-auto Webserver::guessContentType(const String& path) -> String {
-    if (path.endsWith(".html") || path.endsWith(".htm") || path.endsWith("/")) {
+auto Webserver::guessContentTypeC(const char* path) -> const char* {
+    if (path == nullptr) {
+        return "application/octet-stream";
+    }
+
+    const size_t len = strlen(path);
+    if (len == 0) {
+        return "application/octet-stream";
+    }
+
+    if (len >= 5 && strcmp(path + len - 5, ".html") == 0) {
         return "text/html";
     }
 
-    if (path.endsWith(".css")) {
+    if (len >= 4 && strcmp(path + len - 4, ".htm") == 0) {
+        return "text/html";
+    }
+
+    if (path[len - 1] == '/') {
+        return "text/html";
+    }
+
+    if (len >= 4 && strcmp(path + len - 4, ".css") == 0) {
         return "text/css";
     }
 
-    if (path.endsWith(".js")) {
+    if (len >= 3 && strcmp(path + len - 3, ".js") == 0) {
         return "application/javascript";
     }
 
-    if (path.endsWith(".json")) {
+    if (len >= 5 && strcmp(path + len - 5, ".json") == 0) {
         return "application/json";
     }
 
-    if (path.endsWith(".png")) {
+    if (len >= 4 && strcmp(path + len - 4, ".png") == 0) {
         return "image/png";
     }
 
-    if (path.endsWith(".jpg") || path.endsWith(".jpeg")) {
+    if (len >= 4 && strcmp(path + len - 4, ".jpg") == 0) {
         return "image/jpeg";
     }
 
-    if (path.endsWith(".gif")) {
+    if (len >= 5 && strcmp(path + len - 5, ".jpeg") == 0) {
+        return "image/jpeg";
+    }
+
+    if (len >= 4 && strcmp(path + len - 4, ".gif") == 0) {
         return "image/gif";
     }
 
-    if (path.endsWith(".svg")) {
+    if (len >= 4 && strcmp(path + len - 4, ".svg") == 0) {
         return "image/svg+xml";
     }
 
-    if (path.endsWith(".ico")) {
+    if (len >= 4 && strcmp(path + len - 4, ".ico") == 0) {
         return "image/x-icon";
     }
 
-    if (path.endsWith(".txt")) {
+    if (len >= 4 && strcmp(path + len - 4, ".txt") == 0) {
         return "text/plain";
     }
 

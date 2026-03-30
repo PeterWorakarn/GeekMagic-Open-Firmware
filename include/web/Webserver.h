@@ -24,7 +24,6 @@
 #include <ESP8266WebServer.h>
 #include <LittleFS.h>
 #include <functional>
-#include <vector>
 
 /**
  * @brief HTTP status code 200
@@ -59,22 +58,17 @@ class Webserver {
     void handleClient();
     void on(const String& uri, HTTPMethod method, std::function<void()> handler);
     void on(const String& uri, std::function<void()> handler);
-    void serveStaticC(const char* uriC, const char* pathC, const char* contentTypeC = nullptr, int cacheSeconds = 86400,
-                      bool tryGzip = true);
+    void serveStaticC(const char* uriC, const char* pathC, const char* contentTypeC = nullptr,
+                      int cacheSeconds = 86400);
     void registerStaticDir(const String& fsDir, const String& uriPrefix, const String& contentType);
     void registerGenericStaticFallback(const String& fsBasePath = "/web", bool excludeRoot = true);
     void onNotFound(std::function<void()> handler);
     ESP8266WebServer& raw();
-    ~Webserver();
 
    private:
     ESP8266WebServer _server;
-    std::vector<char*> _staticAllocPools;
-    std::vector<char*> _staticAllocFallbackPtrs;
 
-    void logHeapIfNeeded();
-
-    static String guessContentType(const String& path);
+    static const char* guessContentTypeC(const char* path);
 };
 
 #endif  // WEB_SERVER_H

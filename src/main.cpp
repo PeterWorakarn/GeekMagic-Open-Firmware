@@ -38,7 +38,7 @@ const char* AP_SSID = "GeekMagic";
 const char* AP_PASSWORD = "$str0ngPa$$w0rd";
 WiFiManager* wifiManager = nullptr;
 ESP8266HTTPUpdateServer httpUpdater;
-static String KV_SALT = "GeekMagicOpenFirmwareIsAwesome";
+const char KV_SALT_STR[] PROGMEM = "GeekMagicOpenFirmwareIsAwesome";
 static size_t initial_free_heap = 0;
 static constexpr size_t FREE_BUF_SIZE = 32;
 static constexpr size_t MSG_BUF_SIZE = 96;
@@ -110,7 +110,7 @@ void setup() {
         Logger::warn("LittleFS mounted but empty, static web UI disabled", "Global");
     }
 
-    SecureStorage::setSalt(KV_SALT);
+    SecureStorage::setSalt(FPSTR(KV_SALT_STR));
 
     step++;
 
@@ -160,9 +160,6 @@ void setup() {
     } else {
         webserver->serveStaticC("/", "/web/index.html", "text/html");
         webserver->serveStaticC("/config.json", "/config.json", "application/json");
-
-        webserver->registerStaticDir("/web/css", "/css", "text/css");
-        webserver->registerStaticDir("/web/js", "/js", "application/javascript");
         webserver->registerGenericStaticFallback("/web", true);
     }
 

@@ -28,7 +28,7 @@
 #include "config/ConfigManager.h"
 #include "display/Gif.h"
 
-static Gif s_gif;
+static Gif* g_gif = nullptr;
 
 extern ConfigManager configManager;
 
@@ -656,18 +656,25 @@ void DisplayManager::drawLoadingBar(float progress, int yPos, int barWidth, int 
  * @return true if played successfully, false on error
  */
 auto DisplayManager::playGifFullScreen(const String& path, uint32_t timeMs) -> bool {
-    // Ensure any currently playing GIF is stopped so we can start a new one
-    s_gif.stop();
+    if (g_gif == nullptr) {
+        g_gif = new Gif();
+        if (g_gif == nullptr) {
+            Logger::error("Failed to allocate GIF decoder", "DisplayManager");
+            return false;
+        }
+    }
 
-    if (!s_gif.begin()) {
+    g_gif->stop();
+
+    if (!g_gif->begin()) {
         return false;
     }
 
     DisplayManager::clearScreen();
 
-    s_gif.setLoopEnabled(timeMs == 0);
+    g_gif->setLoopEnabled(timeMs == 0);
 
-    const bool started = s_gif.playOne(path);
+    const bool started = g_gif->playOne(path);
     if (!started) {
         return false;
     }
@@ -679,21 +686,14 @@ auto DisplayManager::playGifFullScreen(const String& path, uint32_t timeMs) -> b
     const uint32_t startMs = millis();
     const uint32_t endMs = startMs + timeMs;
 
-    while (s_gif.isPlaying() && static_cast<int32_t>(millis() - endMs) < 0) {
-        s_gif.update();
+    while (g_gif->isPlaying() && static_cast<int32_t>(millis() - endMs) < 0) {
+        g_gif->update();
         yield();
     }
 
-    if (s_gif.isPlaying()) {
-        s_gif.stop();
+    if (g_gif->isPlaying()) {
+        g_gif->stop();
     }
-
-    while (s_gif.isPlaying()) {
-        s_gif.update();
-        yield();
-    }
-
-    s_gif.setLoopEnabled(false);
 
     return true;
 }
@@ -704,14 +704,24 @@ auto DisplayManager::playGifFullScreen(const String& path, uint32_t timeMs) -> b
  * @return true
  */
 auto DisplayManager::stopGif() -> bool {
-    s_gif.stop();
+    if (g_gif != nullptr) {
+        g_gif->stop();
+    }
 
     DisplayManager::clearScreen();
 
     return true;
 }
-
-auto DisplayManager::update() -> void { s_gif.update(); }
+/**
+ * @brief Update the GIF decoder (should be called regularly in loop)
+ *
+ * @return void
+ */
+auto DisplayManager::update() -> void {
+    if (g_gif != nullptr) {
+        g_gif->update();
+    }
+}
 
 /**
  * @brief Clear the entire display to black

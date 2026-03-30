@@ -20,6 +20,7 @@
 #include "ntp/NTPClient.h"
 #include <ctime>
 #include <array>
+#include <lwip/apps/sntp.h>
 #include <Logger.h>
 #include <wireless/WiFiManager.h>
 #include "config/ConfigManager.h"
@@ -168,20 +169,26 @@ void NTPClient::performSync() {
 
             snprintf(buf.data(), buf.size(), "Synced: %04d-%02d-%02d %02d:%02d:%02d", tm_info->tm_year + TM_YEAR_BASE,
                      tm_info->tm_mon + 1, tm_info->tm_mday, tm_info->tm_hour, tm_info->tm_min, tm_info->tm_sec);
-            _lastStatus = String(buf.data());
+            _lastStatus = buf.data();
 
             Logger::info(_lastStatus.c_str(), TAG);
+
+            sntp_stop();
 
             return;
         }
 
-        Logger::warn(String("NTP sync attempt " + String(attempt) + " failed").c_str(), TAG);
+        std::array<char, STATUS_BUFFER_SIZE> retryBuf;
+        snprintf(retryBuf.data(), retryBuf.size(), "NTP sync attempt %d failed", attempt);
+        Logger::warn(retryBuf.data(), TAG);
 
         delay(static_cast<unsigned long>(RETRY_BASE_DELAY_MS) * static_cast<unsigned long>(attempt));
     }
 
     _lastOk = false;
     _lastStatus = "sync failed";
+
+    sntp_stop();
 
     Logger::error("NTP sync failed after retries", TAG);
 }
