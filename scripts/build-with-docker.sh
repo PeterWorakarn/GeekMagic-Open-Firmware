@@ -11,7 +11,7 @@ docker run --rm \
   -w /workspace \
   -v "$(pwd)/.pio:/tmp/.platformio" \
   -e PLATFORMIO_CORE_DIR=/tmp/.platformio \
-  -u $(id -u):$(id -g) \
+  -u "$(id -u):$(id -g)" \
   "$IMAGE_NAME" ${PIO_BIN} run
 
 docker run --rm \
@@ -19,7 +19,7 @@ docker run --rm \
   -w /workspace \
   -v "$(pwd)/.pio:/tmp/.platformio" \
   -e PLATFORMIO_CORE_DIR=/tmp/.platformio \
-  -u $(id -u):$(id -g) \
+  -u "$(id -u):$(id -g)" \
   "$IMAGE_NAME" ${PIO_BIN} run --target buildfs
 
 echo "Done! Binaries in ${BUILD_DIR}"
