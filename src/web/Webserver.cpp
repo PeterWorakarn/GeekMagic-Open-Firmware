@@ -24,12 +24,54 @@
 #include <Logger.h>
 #include <cstring>
 #include <cstdlib>
+#include <array>
 
 #include "web/Webserver.h"
 
 static constexpr size_t URI_BUF_SIZE = 192;
 static constexpr size_t PATH_BUF_SIZE = 256;
 static constexpr bool LOG_STATIC_HIT_INFO = false;
+
+namespace {
+
+struct ContentTypeMapping {
+    const char* suffix;
+    const char* mimeType;
+};
+
+constexpr const char* DEFAULT_CONTENT_TYPE = "application/octet-stream";
+constexpr const char* HTML_CONTENT_TYPE = "text/html";
+
+constexpr std::array<ContentTypeMapping, 12> CONTENT_TYPE_MAPPINGS = {{
+    {".html", HTML_CONTENT_TYPE},
+    {".htm", HTML_CONTENT_TYPE},
+    {".css", "text/css"},
+    {".js", "application/javascript"},
+    {".json", "application/json"},
+    {".png", "image/png"},
+    {".jpg", "image/jpeg"},
+    {".jpeg", "image/jpeg"},
+    {".gif", "image/gif"},
+    {".svg", "image/svg+xml"},
+    {".ico", "image/x-icon"},
+    {".txt", "text/plain"},
+}};
+
+auto hasSuffix(const char* value, const char* suffix) -> bool {
+    if (value == nullptr || suffix == nullptr) {
+        return false;
+    }
+
+    const size_t valueLen = strlen(value);
+    const size_t suffixLen = strlen(suffix);
+    if (valueLen < suffixLen) {
+        return false;
+    }
+
+    return strcmp(value + valueLen - suffixLen, suffix) == 0;
+}
+
+}  // namespace
 
 Webserver::Webserver(uint16_t port) : _server(port) {}
 
@@ -287,66 +329,20 @@ void Webserver::onNotFound(std::function<void()> handler) {
 auto Webserver::raw() -> ESP8266WebServer& { return _server; }
 
 auto Webserver::guessContentTypeC(const char* path) -> const char* {
-    if (path == nullptr) {
-        return "application/octet-stream";
+    if (path == nullptr || path[0] == '\0') {
+        return DEFAULT_CONTENT_TYPE;
     }
 
     const size_t len = strlen(path);
-    if (len == 0) {
-        return "application/octet-stream";
-    }
-
-    if (len >= 5 && strcmp(path + len - 5, ".html") == 0) {
-        return "text/html";
-    }
-
-    if (len >= 4 && strcmp(path + len - 4, ".htm") == 0) {
-        return "text/html";
-    }
-
     if (path[len - 1] == '/') {
-        return "text/html";
+        return HTML_CONTENT_TYPE;
     }
 
-    if (len >= 4 && strcmp(path + len - 4, ".css") == 0) {
-        return "text/css";
+    for (const auto& mapping : CONTENT_TYPE_MAPPINGS) {
+        if (hasSuffix(path, mapping.suffix)) {
+            return mapping.mimeType;
+        }
     }
 
-    if (len >= 3 && strcmp(path + len - 3, ".js") == 0) {
-        return "application/javascript";
-    }
-
-    if (len >= 5 && strcmp(path + len - 5, ".json") == 0) {
-        return "application/json";
-    }
-
-    if (len >= 4 && strcmp(path + len - 4, ".png") == 0) {
-        return "image/png";
-    }
-
-    if (len >= 4 && strcmp(path + len - 4, ".jpg") == 0) {
-        return "image/jpeg";
-    }
-
-    if (len >= 5 && strcmp(path + len - 5, ".jpeg") == 0) {
-        return "image/jpeg";
-    }
-
-    if (len >= 4 && strcmp(path + len - 4, ".gif") == 0) {
-        return "image/gif";
-    }
-
-    if (len >= 4 && strcmp(path + len - 4, ".svg") == 0) {
-        return "image/svg+xml";
-    }
-
-    if (len >= 4 && strcmp(path + len - 4, ".ico") == 0) {
-        return "image/x-icon";
-    }
-
-    if (len >= 4 && strcmp(path + len - 4, ".txt") == 0) {
-        return "text/plain";
-    }
-
-    return "application/octet-stream";
+    return DEFAULT_CONTENT_TYPE;
 }
