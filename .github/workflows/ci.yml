@@ -67,9 +67,11 @@ jobs:
         run: pip install platformio
 
       - name: Install semantic-release and plugins (dry-run)
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
         run: npm install -g semantic-release @semantic-release/changelog @semantic-release/git @semantic-release/github
 
       - name: Compute next version and create local tag
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
