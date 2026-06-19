@@ -1,83 +1,89 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Upload GIF</title>
-    <link rel="stylesheet" href="./css/pico.min.css" />
-    <link rel="stylesheet" href="./css/style.css" />
-    <script src="./js/alpinejs.min.js" defer></script>
-    <script src="./js/utils.js"></script>
-    <script src="./js/themeSwitcher.js"></script>
-    <script src="./js/gifUploadHandler.js"></script>
-    <script src="./js/otaUploadHandler.js"></script>
-    <script src="./js/wifiHandler.js"></script>
-    <script src="./js/rebootHandler.js"></script>
-    <script src="./js/main.js"></script>
-  </head>
-  <body>
-    <main class="container">
-      <header id="header-placeholder"></header>
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Upload GIF</title>
+  <link rel="stylesheet" href="./css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="./css/style.css"/>
+  <script src="./js/bootstrap.bundle.min.js"></script>
+  <script src="./js/alpinejs.min.js" defer></script>
+  <script src="./js/utils.js"></script>
+  <script src="./js/themeSwitcher.js"></script>
+  <script src="./js/gifUploadHandler.js"></script>
+  <script src="./js/main.js"></script>
+</head>
+<body class="d-flex flex-column min-vh-100">
+  <header id="header-placeholder"></header>
 
-      <a href="./index.html" style="margin-left: 2em">← Back to Home</a>
-      <section>
-        <div x-data="gifUploadHandler()" style="margin-top: 2em">
-          <h2>Upload GIF</h2>
-          <form @submit.prevent="uploadGif">
-            <input type="file" x-ref="fileInput" required accept="image/gif" />
-            <button type="submit" x-bind:disabled="uploading">Upload</button>
-          </form>
-          <template x-if="uploading">
-            <span aria-busy="true" style="margin-left: 1em">Uploading...</span>
-          </template>
-          <p x-text="uploadMessage"></p>
+  <main class="container py-4 flex-grow-1">
+    <nav aria-label="breadcrumb" class="mb-3">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="./index.html">Home</a></li>
+        <li class="breadcrumb-item active">Upload GIF</li>
+      </ol>
+    </nav>
 
-          <section style="margin-top: 2em">
-            <h3>GIFs on device</h3>
-            <div style="margin-bottom: 0.5em">
-              <button @click="stopGif()">Stop playback</button>
-            </div>
+    <div class="row g-4" x-data="gifUploadHandler()">
+
+      <div class="col-12 col-md-5">
+        <div class="card shadow-sm">
+          <div class="card-header fw-semibold">🎞️ Upload GIF</div>
+          <div class="card-body">
+            <form @submit.prevent="uploadGif">
+              <div class="mb-3">
+                <input type="file" class="form-control" x-ref="fileInput" required accept="image/gif"/>
+              </div>
+              <button type="submit" class="btn btn-primary" :disabled="uploading">
+                <span x-show="uploading" class="spinner-border spinner-border-sm me-1"></span>
+                Upload
+              </button>
+            </form>
+            <div x-show="uploadMessage" class="mt-3 alert alert-info" x-text="uploadMessage"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-7">
+        <div class="card shadow-sm">
+          <div class="card-header d-flex align-items-center gap-2">
+            <span class="fw-semibold">GIFs on Device</span>
+            <button class="btn btn-sm btn-outline-secondary ms-auto" @click="stopGif()">Stop Playback</button>
+          </div>
+          <div class="card-body">
             <div x-show="gifListLoaded">
-              <p>
-                <strong>Used:</strong> <span x-text="usedBytesHR"></span> /
-                <strong>Total:</strong>
-                <span x-text="totalBytesHR"></span> (<strong>Free:</strong>
-                <span x-text="freeBytesHR"></span>)
+              <p class="text-body-secondary small mb-3">
+                Used: <strong x-text="usedBytesHR"></strong> /
+                Total: <strong x-text="totalBytesHR"></strong>
+                (Free: <strong x-text="freeBytesHR"></strong>)
               </p>
               <template x-if="gifs.length === 0">
-                <p>No GIFs uploaded yet.</p>
+                <p class="text-muted"><em>No GIFs uploaded yet.</em></p>
               </template>
-              <ul>
+              <ul class="list-group list-group-flush">
                 <template x-for="gif in gifs" :key="gif.name">
-                  <li>
-                    <span x-text="gif.name"></span> (<span
-                      x-text="humanFileSize(gif.size)"
-                    ></span
-                    >)
-                    <button
-                      @click="playGifFullscreen(gif.name)"
-                      style="margin-left: 1em"
-                    >
-                      Play fullscreen
-                    </button>
-                    <button
-                      @click="deleteGif(gif.name)"
-                      style="margin-left: 0.5em; color: #b00"
-                    >
-                      Delete
-                    </button>
+                  <li class="list-group-item d-flex align-items-center gap-2 px-0">
+                    <span class="flex-grow-1">
+                      <span x-text="gif.name"></span>
+                      <small class="text-muted ms-1" x-text="'(' + humanFileSize(gif.size) + ')'"></small>
+                    </span>
+                    <button class="btn btn-sm btn-outline-primary" @click="playGifFullscreen(gif.name)">Play</button>
+                    <button class="btn btn-sm btn-outline-danger" @click="deleteGif(gif.name)">Delete</button>
                   </li>
                 </template>
               </ul>
             </div>
             <div x-show="!gifListLoaded">
+              <span class="spinner-border spinner-border-sm me-1"></span>
               <em>Loading GIF list...</em>
             </div>
-          </section>
+          </div>
         </div>
-      </section>
+      </div>
 
-      <footer id="footer-placeholder"></footer>
-    </main>
-  </body>
+    </div>
+  </main>
+
+  <footer id="footer-placeholder"></footer>
+</body>
 </html>

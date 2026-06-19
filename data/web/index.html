@@ -1,64 +1,100 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>GeekMagic Open Firmware</title>
-    <link rel="stylesheet" href="./css/pico.min.css" />
-    <link rel="stylesheet" href="./css/style.css" />
-    <script src="./js/alpinejs.min.js" defer></script>
-    <script src="./js/utils.js"></script>
-    <script src="./js/themeSwitcher.js"></script>
-    <script src="./js/gifUploadHandler.js"></script>
-    <script src="./js/otaUploadHandler.js"></script>
-    <script src="./js/wifiHandler.js"></script>
-    <script src="./js/rebootHandler.js"></script>
-    <script src="./js/main.js"></script>
-  </head>
-  <body>
-    <main class="container">
-      <header id="header-placeholder"></header>
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>GeekMagic Open Firmware</title>
+  <link rel="stylesheet" href="./css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="./css/style.css"/>
+  <script src="./js/bootstrap.bundle.min.js"></script>
+  <script src="./js/alpinejs.min.js" defer></script>
+  <script src="./js/utils.js"></script>
+  <script src="./js/themeSwitcher.js"></script>
+  <script src="./js/rebootHandler.js"></script>
+  <script src="./js/main.js"></script>
+</head>
+<body class="d-flex flex-column min-vh-100">
+  <header id="header-placeholder"></header>
 
-      <section>
-        <div style="margin-top: 2em; display: flex; gap: 1em; flex-wrap: wrap">
-          <a href="./wifi.html">
-            <button type="button" class="secondary">WiFi</button>
-          </a>
-          <a href="./ntp.html">
-            <button type="button" class="secondary">Time (NTP)</button>
-          </a>
-          <a href="./rotation.html">
-            <button type="button" class="secondary">Screen Rotation</button>
-          </a>
-          <a href="./update.html">
-            <button type="button" class="secondary">
-              Firmware / FS Update
-            </button>
-          </a>
-          <a href="./gif_upload.html">
-            <button type="button" class="secondary">Upload GIF</button>
-          </a>
-          <a href="./token.html">
-            <button type="button" class="secondary">API Token</button>
-          </a>
-          <a href="./logs.html">
-            <button type="button" class="secondary">Logs</button>
-          </a>
-        </div>
+  <main class="container py-4 flex-grow-1">
+    <h2 class="mb-4">Dashboard</h2>
 
-        <div x-data="rebootHandler()">
-          <button
-            class="contrast"
-            x-bind:disabled="loading"
-            x-on:click="reboot"
-          >
-            Reboot
-          </button>
-          <p x-text="message"></p>
-        </div>
-      </section>
+    <div class="row g-3">
+      <div class="col-6 col-md-4 col-lg-3">
+        <a href="./wifi.html" class="text-decoration-none">
+          <div class="card h-100 text-center p-3 shadow-sm">
+            <div class="fs-1">📶</div>
+            <div class="mt-2 fw-semibold">WiFi</div>
+          </div>
+        </a>
+      </div>
+      <div class="col-6 col-md-4 col-lg-3">
+        <a href="./ntp.html" class="text-decoration-none">
+          <div class="card h-100 text-center p-3 shadow-sm">
+            <div class="fs-1">🕐</div>
+            <div class="mt-2 fw-semibold">Time (NTP)</div>
+          </div>
+        </a>
+      </div>
+      <div class="col-6 col-md-4 col-lg-3">
+        <a href="./rotation.html" class="text-decoration-none">
+          <div class="card h-100 text-center p-3 shadow-sm">
+            <div class="fs-1">🔄</div>
+            <div class="mt-2 fw-semibold">Screen Rotation</div>
+          </div>
+        </a>
+      </div>
+      <div class="col-6 col-md-4 col-lg-3">
+        <a href="./update.html" class="text-decoration-none">
+          <div class="card h-100 text-center p-3 shadow-sm">
+            <div class="fs-1">⬆️</div>
+            <div class="mt-2 fw-semibold">OTA Update</div>
+          </div>
+        </a>
+      </div>
+      <div class="col-6 col-md-4 col-lg-3">
+        <a href="./gif_upload.html" class="text-decoration-none">
+          <div class="card h-100 text-center p-3 shadow-sm">
+            <div class="fs-1">🎞️</div>
+            <div class="mt-2 fw-semibold">Upload GIF</div>
+          </div>
+        </a>
+      </div>
+      <div class="col-6 col-md-4 col-lg-3">
+        <a href="./locket.html" class="text-decoration-none">
+          <div class="card h-100 text-center p-3 shadow-sm border-primary">
+            <div class="fs-1">🖼️</div>
+            <div class="mt-2 fw-semibold text-primary">Locket</div>
+          </div>
+        </a>
+      </div>
+      <div class="col-6 col-md-4 col-lg-3">
+        <a href="./token.html" class="text-decoration-none">
+          <div class="card h-100 text-center p-3 shadow-sm">
+            <div class="fs-1">🔑</div>
+            <div class="mt-2 fw-semibold">API Token</div>
+          </div>
+        </a>
+      </div>
+      <div class="col-6 col-md-4 col-lg-3">
+        <a href="./logs.html" class="text-decoration-none">
+          <div class="card h-100 text-center p-3 shadow-sm">
+            <div class="fs-1">📋</div>
+            <div class="mt-2 fw-semibold">Logs</div>
+          </div>
+        </a>
+      </div>
+    </div>
 
-      <footer id="footer-placeholder"></footer>
-    </main>
-  </body>
+    <div class="mt-4" x-data="rebootHandler()">
+      <button class="btn btn-danger" x-bind:disabled="loading" x-on:click="reboot">
+        <span x-show="loading" class="spinner-border spinner-border-sm me-1" role="status"></span>
+        Reboot Device
+      </button>
+      <div x-show="message" class="alert alert-warning mt-2" x-text="message"></div>
+    </div>
+  </main>
+
+  <footer id="footer-placeholder"></footer>
+</body>
 </html>

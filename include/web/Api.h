@@ -53,4 +53,7 @@ void handleLogsGet(Webserver* webserver);
 void handleLogsDownload(Webserver* webserver);
 void handleLogsClear(Webserver* webserver);
 
+void handleLocketConfigGet(Webserver* webserver);
+void handleLocketConfigSet(Webserver* webserver);
+
 #endif  // API_H

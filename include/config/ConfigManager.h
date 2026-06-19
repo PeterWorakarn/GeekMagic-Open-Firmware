@@ -67,6 +67,18 @@ class ConfigManager {
     void setNtpServer(const char* s) {
         if (s) ntp_server = s;
     }
+
+    std::string locket_url;
+    int locket_interval_min = 5;
+
+    const char* getLocketUrl() const { return locket_url.c_str(); }
+    void setLocketUrl(const char* s) {
+        if (s) locket_url = s;
+    }
+    int getLocketIntervalMin() const { return locket_interval_min; }
+    void setLocketIntervalMin(int m) {
+        if (m > 0) locket_interval_min = m;
+    }
 };
 
 #endif  // CONFIG_MANAGER_H

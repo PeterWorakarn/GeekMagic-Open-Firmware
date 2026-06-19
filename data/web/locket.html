@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Locket</title>
+  <link rel="stylesheet" href="./css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="./css/style.css"/>
+  <script src="./js/bootstrap.bundle.min.js"></script>
+  <script src="./js/alpinejs.min.js" defer></script>
+  <script src="./js/utils.js"></script>
+  <script src="./js/themeSwitcher.js"></script>
+  <script src="./js/locketHandler.js"></script>
+  <script src="./js/main.js"></script>
+</head>
+<body class="d-flex flex-column min-vh-100">
+  <header id="header-placeholder"></header>
+
+  <main class="container py-4 flex-grow-1">
+    <nav aria-label="breadcrumb" class="mb-3">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="./index.html">Home</a></li>
+        <li class="breadcrumb-item active">Locket</li>
+      </ol>
+    </nav>
+
+    <div class="row justify-content-center">
+      <div class="col-12 col-md-8 col-lg-6">
+        <div class="card shadow-sm" x-data="locketHandler()" x-init="init()">
+          <div class="card-header d-flex align-items-center gap-2">
+            <span class="fs-5">🖼️</span>
+            <strong>Image Display (Locket)</strong>
+            <span class="badge ms-auto"
+              :class="lastOk ? 'bg-success' : 'bg-secondary'"
+              x-text="lastStatus || 'idle'">
+            </span>
+          </div>
+          <div class="card-body">
+
+            <div class="mb-3">
+              <label for="locket-url" class="form-label fw-semibold">Image URL <span class="text-danger">*</span></label>
+              <input id="locket-url" type="url" class="form-control"
+                     placeholder="http://example.com/photo.jpg"
+                     x-model="url"/>
+              <div class="form-text">JPEG only, recommended ≤ 240×240 px, ≤ 200 KB</div>
+            </div>
+
+            <div class="mb-3">
+              <label for="locket-interval" class="form-label fw-semibold">Refetch Interval (minutes)</label>
+              <div class="input-group" style="max-width: 180px">
+                <input id="locket-interval" type="number" class="form-control"
+                       min="1" max="1440" x-model.number="intervalMin"/>
+                <span class="input-group-text">min</span>
+              </div>
+              <div class="form-text">Minimum 1 minute</div>
+            </div>
+
+            <div class="d-flex gap-2 flex-wrap">
+              <button class="btn btn-primary" @click="save()" :disabled="loading">
+                <span x-show="loading" class="spinner-border spinner-border-sm me-1"></span>
+                Save &amp; Fetch
+              </button>
+              <button class="btn btn-outline-secondary" @click="fetchConfig()">
+                Refresh
+              </button>
+            </div>
+
+            <div x-show="message" class="mt-3 alert"
+                 :class="lastOk ? 'alert-success' : 'alert-danger'"
+                 x-text="message">
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer id="footer-placeholder"></footer>
+</body>
+</html>

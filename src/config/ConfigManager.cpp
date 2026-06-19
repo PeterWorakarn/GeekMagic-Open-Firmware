@@ -68,6 +68,8 @@ auto ConfigManager::load() -> bool {
     String ntp_server_cfg = doc["ntp_server"] | "";
 
     this->lcd_rotation = doc["lcd_rotation"] | lcd_rotation;
+    this->locket_url = (doc["locket_url"] | "");
+    this->locket_interval_min = doc["locket_interval_min"] | 5;
 
     String nvs_ssid = secure.get("wifi_ssid", "");
     String nvs_password = secure.get("wifi_password", "");
@@ -204,6 +206,10 @@ auto ConfigManager::save() -> bool {
     if (!this->ntp_server.empty()) {
         doc["ntp_server"] = this->ntp_server.c_str();
     }
+    if (!this->locket_url.empty()) {
+        doc["locket_url"] = this->locket_url.c_str();
+    }
+    doc["locket_interval_min"] = this->locket_interval_min;
 
     if (serializeJson(doc, file) == 0) {
         Logger::error("Failed to write config file", "ConfigManager");

@@ -1,76 +1,68 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>NTP Sync</title>
-    <link rel="stylesheet" href="./css/pico.min.css" />
-    <link rel="stylesheet" href="./css/style.css" />
-    <script src="./js/alpinejs.min.js" defer></script>
-    <script src="./js/utils.js"></script>
-    <script src="./js/themeSwitcher.js"></script>
-    <script src="./js/ntpHandler.js"></script>
-    <script src="./js/main.js"></script>
-  </head>
-  <body>
-    <main class="container">
-      <header id="header-placeholder"></header>
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>NTP Sync</title>
+  <link rel="stylesheet" href="./css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="./css/style.css"/>
+  <script src="./js/bootstrap.bundle.min.js"></script>
+  <script src="./js/alpinejs.min.js" defer></script>
+  <script src="./js/utils.js"></script>
+  <script src="./js/themeSwitcher.js"></script>
+  <script src="./js/ntpHandler.js"></script>
+  <script src="./js/main.js"></script>
+</head>
+<body class="d-flex flex-column min-vh-100">
+  <header id="header-placeholder"></header>
 
-      <a href="./index.html" class="wifi-back-link">← Back to Home</a>
+  <main class="container py-4 flex-grow-1">
+    <nav aria-label="breadcrumb" class="mb-3">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="./index.html">Home</a></li>
+        <li class="breadcrumb-item active">NTP</li>
+      </ol>
+    </nav>
 
-      <section x-data="ntpHandler()" x-init="init()">
-        <h2>NTP Time</h2>
+    <div class="row justify-content-center">
+      <div class="col-12 col-md-8 col-lg-6">
+        <div class="card shadow-sm" x-data="ntpHandler()" x-init="init()">
+          <div class="card-header fw-semibold">🕐 NTP Time Sync</div>
+          <div class="card-body">
 
-        <p>
-          <strong>Status:</strong>
-          <span x-text="lastStatus"></span>
-        </p>
+            <div class="mb-3">
+              <div><strong>Status:</strong> <span x-text="lastStatus"></span></div>
+              <div><strong>Last sync:</strong> <span x-text="humanTime(lastSyncTime)"></span></div>
+              <small x-text="lastOk ? 'Last sync succeeded' : 'Last sync failed or not performed'"
+                     :class="lastOk ? 'text-success' : 'text-muted'"></small>
+            </div>
 
-        <p>
-          <strong>Last sync:</strong>
-          <span x-text="humanTime(lastSyncTime)"></span>
-        </p>
+            <div class="d-flex gap-2 mb-4">
+              <button type="button" class="btn btn-primary" @click="syncNow()" :disabled="loading">
+                <span x-show="loading" class="spinner-border spinner-border-sm me-1"></span>
+                Sync Now
+              </button>
+              <button type="button" class="btn btn-outline-secondary" @click="fetchStatus()">
+                Refresh
+              </button>
+            </div>
 
-        <div>
-          <button
-            type="button"
-            class="primary"
-            @click="syncNow()"
-            x-bind:disabled="loading"
-          >
-            Sync Now
-          </button>
-          <button type="button" class="primary" @click="fetchStatus()">
-            Refresh Status
-          </button>
-        </div>
+            <hr/>
 
-        <hr />
+            <h6 class="fw-semibold">NTP Configuration</h6>
+            <div class="mb-3">
+              <label for="ntp-server" class="form-label">NTP Server</label>
+              <input id="ntp-server" type="text" class="form-control"
+                     x-model="ntpServer" placeholder="pool.ntp.org"/>
+            </div>
+            <button type="button" class="btn btn-primary" @click="saveConfig()">Save</button>
 
-        <div class="ntp-config">
-          <h3>NTP Configuration</h3>
-          <label for="ntp-server">NTP Server</label>
-          <input
-            id="ntp-server"
-            type="text"
-            x-model="ntpServer"
-            placeholder="pool.ntp.org"
-          />
-          <div style="margin-top: 0.5em">
-            <button type="button" class="primary" @click="saveConfig()">
-              Save
-            </button>
           </div>
         </div>
+      </div>
+    </div>
+  </main>
 
-        <p>
-          <small
-            x-text="lastOk ? 'Last sync succeeded' : 'Last sync failed or not performed'"
-          ></small>
-        </p>
-      </section>
-
-      <footer id="footer-placeholder"></footer>
-    </main>
-  </body>
+  <footer id="footer-placeholder"></footer>
+</body>
 </html>

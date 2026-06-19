@@ -29,6 +29,7 @@
 #include "config/ConfigManager.h"
 #include "wireless/WiFiManager.h"
 #include "ntp/NTPClient.h"
+#include "imagefetch/ImageFetcher.h"
 
 extern ConfigManager configManager;
 extern WiFiManager* wifiManager;
@@ -172,6 +173,16 @@ void registerApiEndpoints(Webserver* webserver) {
     // @openapi {post} /logs/clear version=v1 group=System summary="Clear log buffer" requiresAuth=true
     // responses=200:application/json,401:application/json
     webserver->raw().on("/api/v1/logs/clear", HTTP_POST, [webserver]() { handleLogsClear(webserver); });
+
+    // @openapi {get} /locket/config version=v1 group=Locket summary="Get locket image config" requiresAuth=true
+    // responses=200:application/json,401:application/json
+    webserver->raw().on("/api/v1/locket/config", HTTP_GET, [webserver]() { handleLocketConfigGet(webserver); });
+
+    // @openapi {post} /locket/config version=v1 group=Locket summary="Set locket image config" requiresAuth=true
+    // requestBody=application/json requestBodySchema=url:string,interval_min:integer
+    // example={"url":"https://example.com/photo.jpg","interval_min":5}
+    // responses=200:application/json,400:application/json,401:application/json
+    webserver->raw().on("/api/v1/locket/config", HTTP_POST, [webserver]() { handleLocketConfigSet(webserver); });
 
     webserver->raw().onNotFound([webserver]() {
         if (webserver->raw().method() == HTTP_OPTIONS) {
@@ -1547,4 +1558,106 @@ void handleLogsClear(Webserver* webserver) {
 
     setCorsHeaders(webserver);
     webserver->raw().send(HTTP_CODE_OK, "application/json", json);
+}
+
+/**
+ * @brief Get Locket image configuration
+ */
+void handleLocketConfigGet(Webserver* webserver) {
+    if (!requireBearerToken(webserver)) {
+        return;
+    }
+
+    JsonDocument doc;
+    doc["url"] = configManager.getLocketUrl();
+    doc["interval_min"] = configManager.getLocketIntervalMin();
+    doc["lastStatus"] = ImageFetcher::lastStatus();
+    doc["lastOk"] = ImageFetcher::lastOk();
+
+    String json;
+    serializeJson(doc, json);
+
+    setCorsHeaders(webserver);
+    webserver->raw().send(HTTP_CODE_OK, "application/json", json);
+}
+
+/**
+ * @brief Set Locket image configuration and trigger an immediate fetch
+ */
+void handleLocketConfigSet(Webserver* webserver) {
+    if (!requireBearerToken(webserver)) {
+        return;
+    }
+
+    if (!webserver->raw().hasArg("plain") || webserver->raw().arg("plain").length() == 0) {
+        JsonDocument doc;
+        doc["status"] = "error";
+        doc["message"] = "Missing JSON body";
+        String json;
+        serializeJson(doc, json);
+        setCorsHeaders(webserver);
+        webserver->raw().send(HTTP_CODE_BAD_REQUEST, "application/json", json);
+        return;
+    }
+
+    String body = webserver->raw().arg("plain");
+    JsonDocument ddoc;
+    DeserializationError err = deserializeJson(ddoc, body);
+    if (err) {
+        JsonDocument doc;
+        doc["status"] = "error";
+        doc["message"] = "Invalid JSON";
+        String json;
+        serializeJson(doc, json);
+        setCorsHeaders(webserver);
+        webserver->raw().send(HTTP_CODE_BAD_REQUEST, "application/json", json);
+        return;
+    }
+
+    const char* url = ddoc["url"] | "";
+    int intervalMin = ddoc["interval_min"] | 5;
+
+    if (strlen(url) == 0) {
+        JsonDocument doc;
+        doc["status"] = "error";
+        doc["message"] = "url is required";
+        String json;
+        serializeJson(doc, json);
+        setCorsHeaders(webserver);
+        webserver->raw().send(HTTP_CODE_BAD_REQUEST, "application/json", json);
+        return;
+    }
+    if (intervalMin < 1) {
+        intervalMin = 1;
+    }
+
+    configManager.setLocketUrl(url);
+    configManager.setLocketIntervalMin(intervalMin);
+
+    if (!configManager.save()) {
+        JsonDocument doc;
+        doc["status"] = "error";
+        doc["message"] = "Failed to save config";
+        String json;
+        serializeJson(doc, json);
+        setCorsHeaders(webserver);
+        webserver->raw().send(HTTP_CODE_INTERNAL_ERROR, "application/json", json);
+        return;
+    }
+
+    bool ok = ImageFetcher::fetchAndDisplayNow();
+
+    JsonDocument doc;
+    doc["status"] = "ok";
+    doc["url"] = url;
+    doc["interval_min"] = intervalMin;
+    doc["fetched"] = ok;
+    doc["lastStatus"] = ImageFetcher::lastStatus();
+    String json;
+    serializeJson(doc, json);
+
+    setCorsHeaders(webserver);
+    webserver->raw().send(HTTP_CODE_OK, "application/json", json);
+
+    Logger::info("Locket config updated", "API");
 }

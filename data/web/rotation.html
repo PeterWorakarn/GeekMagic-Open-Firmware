@@ -1,73 +1,70 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Screen Rotation</title>
-    <link rel="stylesheet" href="./css/pico.min.css" />
-    <link rel="stylesheet" href="./css/style.css" />
-    <script src="./js/alpinejs.min.js" defer></script>
-    <script src="./js/utils.js"></script>
-    <script src="./js/themeSwitcher.js"></script>
-    <script src="./js/rotationHandler.js"></script>
-    <script src="./js/main.js"></script>
-  </head>
-  <body>
-    <main class="container">
-      <header id="header-placeholder"></header>
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Screen Rotation</title>
+  <link rel="stylesheet" href="./css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="./css/style.css"/>
+  <script src="./js/bootstrap.bundle.min.js"></script>
+  <script src="./js/alpinejs.min.js" defer></script>
+  <script src="./js/utils.js"></script>
+  <script src="./js/themeSwitcher.js"></script>
+  <script src="./js/rotationHandler.js"></script>
+  <script src="./js/main.js"></script>
+</head>
+<body class="d-flex flex-column min-vh-100">
+  <header id="header-placeholder"></header>
 
-      <a href="./index.html" class="wifi-back-link">← Back to Home</a>
+  <main class="container py-4 flex-grow-1">
+    <nav aria-label="breadcrumb" class="mb-3">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="./index.html">Home</a></li>
+        <li class="breadcrumb-item active">Screen Rotation</li>
+      </ol>
+    </nav>
 
-      <section x-data="rotationHandler()" x-init="init()">
-        <h2>Display Rotation</h2>
+    <div class="row justify-content-center">
+      <div class="col-12 col-md-8 col-lg-6">
+        <div class="card shadow-sm" x-data="rotationHandler()" x-init="init()">
+          <div class="card-header fw-semibold">🔄 Display Rotation</div>
+          <div class="card-body">
 
-        <p>Choose a display orientation and apply it immediately.</p>
+            <p class="text-body-secondary">Choose a display orientation and apply it immediately.</p>
 
-        <label for="screen-rotation">Rotation</label>
-        <select
-          id="screen-rotation"
-          x-model.number="rotation"
-          x-bind:disabled="loading"
-        >
-          <option value="0">Portrait (mode 0)</option>
-          <option value="1">Landscape right (mode 1)</option>
-          <option value="2">Upside down (mode 2)</option>
-          <option value="3">Landscape left (mode 3)</option>
-          <option value="4">Portrait mirrored (mode 4)</option>
-          <option value="5">Landscape right mirrored (mode 5)</option>
-          <option value="6">Upside down mirrored (mode 6)</option>
-          <option value="7">Landscape left mirrored (mode 7)</option>
-        </select>
+            <div class="mb-3">
+              <label for="screen-rotation" class="form-label fw-semibold">Rotation</label>
+              <select id="screen-rotation" class="form-select" x-model.number="rotation" :disabled="loading">
+                <option value="0">Portrait (mode 0)</option>
+                <option value="1">Landscape right (mode 1)</option>
+                <option value="2">Upside down (mode 2)</option>
+                <option value="3">Landscape left (mode 3)</option>
+                <option value="4">Portrait mirrored (mode 4)</option>
+                <option value="5">Landscape right mirrored (mode 5)</option>
+                <option value="6">Upside down mirrored (mode 6)</option>
+                <option value="7">Landscape left mirrored (mode 7)</option>
+              </select>
+              <div class="form-text">Modes 4–7 are mirrored variants supported by the display driver.</div>
+            </div>
 
-        <small
-          >Modes 4 to 7 are mirrored variants supported by the display
-          driver.</small
-        >
+            <div class="d-flex gap-2">
+              <button type="button" class="btn btn-primary" @click="saveRotation()" :disabled="loading">
+                <span x-show="loading" class="spinner-border spinner-border-sm me-1"></span>
+                Save Rotation
+              </button>
+              <button type="button" class="btn btn-outline-secondary" @click="fetchRotation()" :disabled="loading">
+                Refresh
+              </button>
+            </div>
 
-        <div
-          style="margin-top: 0.5em; display: flex; gap: 0.5em; flex-wrap: wrap"
-        >
-          <button
-            type="button"
-            class="primary"
-            @click="saveRotation()"
-            x-bind:disabled="loading"
-          >
-            Save Rotation
-          </button>
-          <button
-            type="button"
-            @click="fetchRotation()"
-            x-bind:disabled="loading"
-          >
-            Refresh
-          </button>
+            <div x-show="statusMsg" class="mt-3 alert alert-info" x-text="statusMsg"></div>
+
+          </div>
         </div>
+      </div>
+    </div>
+  </main>
 
-        <p x-text="statusMsg"></p>
-      </section>
-
-      <footer id="footer-placeholder"></footer>
-    </main>
-  </body>
+  <footer id="footer-placeholder"></footer>
+</body>
 </html>

@@ -1,95 +1,59 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>System Logs</title>
-    <link rel="stylesheet" href="./css/pico.min.css" />
-    <link rel="stylesheet" href="./css/style.css" />
-    <script src="./js/alpinejs.min.js" defer></script>
-    <script src="./js/utils.js"></script>
-    <script src="./js/themeSwitcher.js"></script>
-    <script src="./js/logsHandler.js"></script>
-    <script src="./js/main.js"></script>
-  </head>
-  <body>
-    <main class="container">
-      <header id="header-placeholder"></header>
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>System Logs</title>
+  <link rel="stylesheet" href="./css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="./css/style.css"/>
+  <script src="./js/bootstrap.bundle.min.js"></script>
+  <script src="./js/alpinejs.min.js" defer></script>
+  <script src="./js/utils.js"></script>
+  <script src="./js/themeSwitcher.js"></script>
+  <script src="./js/logsHandler.js"></script>
+  <script src="./js/main.js"></script>
+</head>
+<body class="d-flex flex-column min-vh-100">
+  <header id="header-placeholder"></header>
 
-      <a href="./index.html" class="wifi-back-link">← Back to Home</a>
+  <main class="container py-4 flex-grow-1">
+    <nav aria-label="breadcrumb" class="mb-3">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="./index.html">Home</a></li>
+        <li class="breadcrumb-item active">Logs</li>
+      </ol>
+    </nav>
 
-      <section x-data="logsHandler()" x-init="init()">
-        <h2>System Logs</h2>
-
-        <div
-          style="margin-bottom: 1em; display: flex; gap: 0.5em; flex-wrap: wrap"
-        >
-          <button
-            type="button"
-            class="primary"
-            @click="fetchLogs()"
-            x-bind:disabled="loading"
-          >
+    <div class="card shadow-sm" x-data="logsHandler()" x-init="init()">
+      <div class="card-header d-flex align-items-center gap-2">
+        <span class="fw-semibold">📋 System Logs</span>
+        <small class="text-body-secondary ms-2" x-text="'(' + logs.length + ' entries)'"></small>
+        <div class="ms-auto d-flex gap-2">
+          <button type="button" class="btn btn-sm btn-outline-primary" @click="fetchLogs()" :disabled="loading">
+            <span x-show="loading" class="spinner-border spinner-border-sm me-1"></span>
             Refresh
           </button>
-          <button
-            type="button"
-            class="secondary"
-            @click="downloadLogs()"
-            x-bind:disabled="loading"
-          >
-            Download
-          </button>
-          <button
-            type="button"
-            class="contrast"
-            @click="clearLogs()"
-            x-bind:disabled="loading"
-          >
-            Clear
-          </button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" @click="downloadLogs()" :disabled="loading">Download</button>
+          <button type="button" class="btn btn-sm btn-outline-danger" @click="clearLogs()" :disabled="loading">Clear</button>
         </div>
-
-        <p>
-          <small x-text="'Showing ' + logs.length + ' log entries'"></small>
+      </div>
+      <div class="card-body">
+        <p class="text-body-secondary small mb-2">
+          Only WARNING and ERROR logs are shown here. Check serial output for full details.
         </p>
-        <p>
-          <small
-            x-text="'Only WARNING and ERROR logs are shown here for optimisation. Please check the serial output for more details.'"
-          ></small>
-        </p>
-
-        <div
-          style="
-            background: var(--pico-code-background-color);
-            padding: 1em;
-            border-radius: 4px;
-            max-height: 60vh;
-            overflow-y: auto;
-            font-family: monospace;
-            font-size: 0.85em;
-          "
-        >
+        <div class="bg-body-tertiary rounded p-3 font-monospace" style="max-height: 60vh; overflow-y: auto; font-size: 0.83em;">
           <template x-if="logs.length === 0">
-            <p style="color: var(--pico-muted-color)">No logs available</p>
+            <p class="text-muted mb-0"><em>No logs available</em></p>
           </template>
           <template x-for="(log, index) in logs" :key="index">
-            <div
-              x-text="log"
-              style="
-                white-space: pre-wrap;
-                word-break: break-all;
-                padding: 2px 0;
-                border-bottom: 1px solid var(--pico-muted-border-color);
-              "
-            ></div>
+            <div x-text="log" style="white-space: pre-wrap; word-break: break-all; padding: 2px 0; border-bottom: 1px solid var(--bs-border-color);"></div>
           </template>
         </div>
+        <div x-show="message" class="mt-3 alert alert-info" x-text="message"></div>
+      </div>
+    </div>
+  </main>
 
-        <p x-show="message" x-text="message" style="margin-top: 1em"></p>
-      </section>
-
-      <footer id="footer-placeholder"></footer>
-    </main>
-  </body>
+  <footer id="footer-placeholder"></footer>
+</body>
 </html>

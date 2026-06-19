@@ -31,6 +31,7 @@
 #include "web/Webserver.h"
 #include "web/Api.h"
 #include "ntp/NTPClient.h"
+#include "imagefetch/ImageFetcher.h"
 #include <array>
 
 ConfigManager configManager;
@@ -153,6 +154,7 @@ void setup() {
     DisplayManager::drawLoadingBar((float)step / TOTAL_STEPS, LOADING_BAR_Y);
 
     registerApiEndpoints(webserver);
+    ImageFetcher::begin();
 
     if (!littleFsReadyForStatic) {
         httpUpdater.setup(&webserver->raw(), "/legacyupdate");
@@ -184,6 +186,7 @@ void loop() {
     }
 
     DisplayManager::update();
+    ImageFetcher::loop();
 
     static unsigned long last_free_heap_log = 0;
     static constexpr unsigned long FREE_HEAP_LOG_INTERVAL_MS = 10000UL;
